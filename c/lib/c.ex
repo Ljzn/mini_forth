@@ -17,6 +17,24 @@ defmodule C do
   end
 
   @doc """
+  Parse the string code into a map of definations.
+
+  ## Examples
+
+      iex> code = ": add1 1 add ; : add2 add1 add1 ;"
+      ...> C.parse(code)
+      %{add1: [1, :add], add2: [:add1, :add1]}
+
+  """
+  def parse(str) do
+    {:ok, result, _, _, _, _} = P.simple_forth(str)
+
+    for {k, v} <- result, into: %{} do
+      {k, v}
+    end
+  end
+
+  @doc """
   Replace the user defined keywrod.
   The max round is 100.
 
