@@ -7,7 +7,12 @@ defmodule C.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      escript: [
+        name: "mini_forth",
+        main_module: MiniForth,
+        comment: "A simple bitcoin script runner"
+      ]
     ]
   end
 

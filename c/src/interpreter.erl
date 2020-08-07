@@ -66,7 +66,8 @@ op(hash256, C, M) -> {[sha256, sha256 | C], M};
 op(not0, C, M) -> {['not', 'not' | C], M};
 op(negate, C, [H | M]) -> {C, [-H | M]};
 op(bin2num, C, [H | M]) -> {C, [bin2num(H) | M]};
-op(dup, C, [H | M]) -> {C, [H, H | M]}.
+op(dup, C, [H | M]) -> {C, [H, H | M]};
+op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]}.
 
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),
@@ -126,7 +127,7 @@ flip_endian(B) ->
 
 %% TESTING
 
-test() -> test1(), test2().
+test() -> test1(), test2(), test3().
 
 test1() ->
     List = [{255, <<255, 0>>}, {1, <<1>>}, {127, <<127>>},
@@ -140,3 +141,6 @@ test2() ->
     1 = bin2num(<<1, 0>>),
     -127 = bin2num(<<255>>),
     -127 = bin2num(<<127, 128>>).
+
+test3() ->
+    {[<<"am">>], []} = eval([<<"I am a fish">>, 2, 2, rot, rot, split, nip, swap, split, drop]).

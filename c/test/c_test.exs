@@ -12,16 +12,19 @@ defmodule CTest do
 
     : right split nip ;
 
-    : sub
+    : substr
       rot rot right
       swap left ;
+
+    : main "I am a fish" 2 2 substr ;
 
     """
 
     mid = %{
       left: [:split, :drop],
       right: [:split, :nip],
-      sub: [:rot, :rot, :right, :swap, :left]
+      substr: [:rot, :rot, :right, :swap, :left],
+      main: ["I am a fish", 2, 2, :substr]
     }
 
     assert C.parse(code) == mid
@@ -29,9 +32,12 @@ defmodule CTest do
     asm = %{
       left: [:split, :drop],
       right: [:split, :nip],
-      sub: [:rot, :rot, :split, :nip, :swap, :split, :drop]
+      substr: [:rot, :rot, :split, :nip, :swap, :split, :drop],
+      main: ["I am a fish", 2, 2, :rot, :rot, :split, :nip, :swap, :split, :drop]
     }
 
     assert C.replace(mid) == asm
+
+    assert {["am"], []} == :interpreter.eval(asm.main)
   end
 end
