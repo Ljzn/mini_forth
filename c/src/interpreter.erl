@@ -66,6 +66,7 @@ op(hash256, C, M) -> {[sha256, sha256 | C], M};
 op(not0, C, M) -> {['not', 'not' | C], M};
 op(negate, C, [H | M]) -> {C, [-H | M]};
 op(bin2num, C, [H | M]) -> {C, [bin2num(H) | M]};
+op(num2bin, C, [Y, X | M]) -> {C, [num2bin(X, Y) | M]};
 op(dup, C, [H | M]) -> {C, [H, H | M]};
 op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]}.
 
@@ -98,7 +99,6 @@ split_branch([X | R], T, F, L, t) ->
 split_branch([X | R], T, F, L, f) ->
     split_branch(R, T, [X | F], L, f).
 
-bin2num(B) when byte_size(B) > 4 -> invalid_range;
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
 do_bin2num(<<1:1, D/bits>>) ->
@@ -121,13 +121,25 @@ num2bin(N) ->
 	 end,
     flip_endian(B1).
 
+num2bin(N, S) -> B = num2bin(N), pad_zeros(B, S).
+
+pad_zeros(B, S) ->
+    case byte_size(B) < S of
+      true ->
+	  <<H:1, T/bits>> = flip_endian(B),
+	  pad_zeros(flip_endian(<<H:1, 0:8, T/bits>>), S);
+      false -> B
+    end.
+
 flip_endian(B) ->
     B1 = binary_to_list(B),
     list_to_binary(lists:reverse(B1)).
 
 %% TESTING
 
-test() -> test1(), test2(), test3().
+simple_eval(C) -> hd(element(1, eval(C))).
+
+test() -> test1(), test2(), test3(), test4(), test5().
 
 test1() ->
     List = [{255, <<255, 0>>}, {1, <<1>>}, {127, <<127>>},
@@ -138,9 +150,26 @@ test1() ->
     [Match(N, B) || {N, B} <- List].
 
 test2() ->
+    0 = bin2num(<<0>>),
+    1 = bin2num(<<1, 0, 0, 0, 0, 0, 0>>),
+    -1 = bin2num(<<1, 0, 0, 0, 0, 0, 128>>),
+    0 = bin2num(<<128>>),
+    0 = bin2num(<<0, 0, 0, 0, 0, 0, 128>>),
     1 = bin2num(<<1, 0>>),
     -127 = bin2num(<<255>>),
     -127 = bin2num(<<127, 128>>).
 
 test3() ->
-    {[<<"am">>], []} = eval([<<"I am a fish">>, 2, 2, rot, rot, split, nip, swap, split, drop]).
+    {[<<"am">>], []} = eval([<<"I am a fish">>, 2, 2, rot,
+			     rot, split, nip, swap, split, drop]).
+
+test4() ->
+    List = [{27, 7, 6}, {27, -7, 6}, {-27, 7, -6},
+	    {-27, -7, -6}],
+    Match = fun ({A, B, R}) -> {[R], []} = eval([A, B, '%'])
+	    end,
+    [Match(P) || P <- List].
+
+test5() ->
+    <<2, 0, 0, 0>> = simple_eval([2, 4, num2bin]),
+    <<5, 0, 0, 128>> = simple_eval([-5, 4, num2bin]).
