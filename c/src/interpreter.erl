@@ -1,12 +1,13 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, num2bin/1, test/0]).
+-export([bin2num/1, eval/1, eval/3, num2bin/1, test/0,
+	 unroll/1]).
 
 eval(S) -> eval(S, [], []).
 
-eval([toaltstack | C], [X | M], A) ->
+eval([tas | C], [X | M], A) ->
     eval(C, M, [X | A]);
-eval([fromaltstack | C], M, [X | A]) ->
+eval([fas | C], M, [X | A]) ->
     eval(C, [X | M], A);
 eval(['+' | C], [Y, X | M], A) ->
     eval(C, [X + Y | M], A);
@@ -58,8 +59,8 @@ eval([tuck | C], [X, Y | M], A) ->
     eval(C, [X, Y, X | M], A);
 eval([OP | C], M, A) ->
     case op(OP, C, M) of
-        {C1, M1} -> eval(C1, M1, A);
-        ok -> ok
+      {C1, M1} -> eval(C1, M1, A);
+      ok -> ok
     end;
 eval([], M, A) -> {M, A}.
 
@@ -77,7 +78,10 @@ op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
 op('!', _C, [0 | _M]) -> io:format("verify failed.");
 op('!', C, [_X | M]) -> {C, M};
 op('=!', C, [X, X | M]) -> {C, M};
-op('=!', _C, [Y, X | _M]) -> io:format("equal_verify failed.\ntop: ~p, second: ~p~n", [Y, X]).
+op('=!', _C, [Y, X | _M]) ->
+    io:format("equal_verify failed.\ntop: ~p, second: "
+	      "~p~n",
+	      [Y, X]).
 
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),
@@ -86,6 +90,7 @@ split(B, P) ->
 branches(C) -> split_branch(C, [], [], 0, t).
 
 choose(0, _T, F) -> F;
+choose(false, _T, F) -> F;
 choose(_X, T, _F) -> T.
 
 logic_not(0) -> 1;
@@ -107,6 +112,37 @@ split_branch([X | R], T, F, L, t) ->
     split_branch(R, [X | T], F, L, t);
 split_branch([X | R], T, F, L, f) ->
     split_branch(R, T, [X | F], L, f).
+
+%% Loop Unroll (not support nested loop)
+
+unroll(S) -> unroll_loop(S, []).
+
+unroll_loop([do | C], [S, E | M]) ->
+    {P, C1} = find_loop_part(C, 0, []),
+    C2 = loops(P, S, E, [], S) ++ C1,
+    unroll_loop(C2, M);
+unroll_loop([H | C], M) -> unroll_loop(C, [H | M]);
+unroll_loop([], M) -> lists:reverse(M).
+
+find_loop_part([loop | C], 0, P) ->
+    {lists:reverse(P), C};
+find_loop_part([do | C], L, P) ->
+    find_loop_part(C, L + 1, P);
+find_loop_part([loop | C], L, P) ->
+    find_loop_part(C, L - 1, P);
+find_loop_part([X | C], L, P) ->
+    find_loop_part(C, L, [X | P]).
+
+loops(_P, S, E, R, _I) when S >= E ->
+    lists:flatten(lists:reverse(R));
+loops(P, S, E, R, I) ->
+    loops(P, S + 1, E, [set_i(P, I) | R], I + 1).
+
+set_i(P, I) -> set_i(P, I, []).
+
+set_i([i | C], I, R) -> set_i(C, I, [I | R]);
+set_i([], _I, R) -> lists:reverse(R);
+set_i([H | C], I, R) -> set_i(C, I, [H | R]).
 
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
@@ -148,7 +184,8 @@ flip_endian(B) ->
 
 simple_eval(C) -> hd(element(1, eval(C))).
 
-test() -> test1(), test2(), test3(), test4(), test5().
+test() ->
+    test1(), test2(), test3(), test4(), test5(), test6().
 
 test1() ->
     List = [{255, <<255, 0>>}, {1, <<1>>}, {127, <<127>>},
@@ -182,3 +219,10 @@ test4() ->
 test5() ->
     <<2, 0, 0, 0>> = simple_eval([2, 4, num2bin]),
     <<5, 0, 0, 128>> = simple_eval([-5, 4, num2bin]).
+
+test6() ->
+    {[70, 63, 56, 49, 42, 35, 28, 21, 14, 7], []} = eval([7
+							  | unroll([11, 1, do,
+								    dup, i, '*',
+								    swap, loop,
+								    drop])]).

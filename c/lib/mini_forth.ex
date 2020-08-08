@@ -105,4 +105,6 @@ defmodule MiniForth do
   end
 end
 
-MiniForth.main(System.argv())
+if Mix.env() !== :test do
+  MiniForth.main(System.argv())
+end
