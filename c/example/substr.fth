@@ -7,3 +7,5 @@
     swap left ;
 
 : main "I am a fish" 2 2 substr ;
+
+: test main "am" =! ;

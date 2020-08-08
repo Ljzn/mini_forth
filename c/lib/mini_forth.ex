@@ -73,19 +73,36 @@ defmodule MiniForth do
       code
       |> C.parse()
       |> C.replace()
+
+    main =
+      raw
       |> Map.get(:main)
 
-    IO.puts("Raw script: \n" <> inspect(raw) <> "\n")
+    if main do
+      IO.puts("Raw script: \n" <> inspect(main) <> "\n")
 
-    raw
-    |> :interpreter.eval()
-    |> print_stacks()
+      main
+      |> :interpreter.eval()
+      |> print_stacks()
+    end
+
+    test =
+      raw
+      |> Map.get(:test)
+
+    if test do
+      case test |> :interpreter.eval() do
+        :ok -> :ok
+        _X -> IO.puts("Test passed.")
+      end
+    end
   end
 
   defp print_stacks({m, a}) do
     IO.puts("MainStack: " <> inspect(m))
     IO.puts("AltStack:  " <> inspect(a))
+    IO.puts("")
   end
 end
 
-# MiniForth.main(System.argv())
+MiniForth.main(System.argv())

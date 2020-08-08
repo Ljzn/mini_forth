@@ -57,7 +57,10 @@ eval([drop | C], [_X | M], A) -> eval(C, M, A);
 eval([tuck | C], [X, Y | M], A) ->
     eval(C, [X, Y, X | M], A);
 eval([OP | C], M, A) ->
-    {C1, M1} = op(OP, C, M), eval(C1, M1, A);
+    case op(OP, C, M) of
+        {C1, M1} -> eval(C1, M1, A);
+        ok -> ok
+    end;
 eval([], M, A) -> {M, A}.
 
 op(sha256, C, [H | M]) ->
@@ -68,7 +71,13 @@ op(negate, C, [H | M]) -> {C, [-H | M]};
 op(bin2num, C, [H | M]) -> {C, [bin2num(H) | M]};
 op(num2bin, C, [Y, X | M]) -> {C, [num2bin(X, Y) | M]};
 op(dup, C, [H | M]) -> {C, [H, H | M]};
-op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]}.
+op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]};
+op('=', C, [X, X | M]) -> {C, [1 | M]};
+op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
+op('!', _C, [0 | _M]) -> io:format("verify failed.");
+op('!', C, [_X | M]) -> {C, M};
+op('=!', C, [X, X | M]) -> {C, M};
+op('=!', _C, [Y, X | _M]) -> io:format("equal_verify failed.\ntop: ~p, second: ~p~n", [Y, X]).
 
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),
