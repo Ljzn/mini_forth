@@ -8,6 +8,13 @@ defmodule P do
 
   defp to_type({:binary, bin}), do: bin
 
+  defp to_type({:hex_number, [hex]}) do
+    {int, ""} = Integer.parse(hex, 16)
+    int
+  end
+
+  defp to_type({:neg_integer, [int]}), do: -int
+
   defp to_type(str) when is_binary(str) do
     String.to_atom(str)
   end
@@ -15,7 +22,16 @@ defmodule P do
   defp to_type(x), do: x
 
   identifier =
-    ascii_string([?a..?z, ?A..?Z, ?0..?9, ?=, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<, ?&, ?|], min: 1)
+    ascii_string([?a..?z, ?A..?Z, ?0..?9, ?=, ?_, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<, ?&, ?|, ?.],
+      min: 1
+    )
+
+  neg_integer = ignore(string("-")) |> integer(min: 1) |> tag(:neg_integer)
+
+  hex_number =
+    ignore(string("0x"))
+    |> ascii_string([?a..?f, ?A..?F, ?0..?9], min: 1)
+    |> tag(:hex_number)
 
   binary =
     ignore(string("\"")) |> utf8_string([not: 34], min: 1) |> ignore(string("\"")) |> tag(:binary)
@@ -24,7 +40,7 @@ defmodule P do
     string(":")
     |> ignore(string(" "))
     |> times(
-      choice([integer(min: 1), identifier, binary])
+      choice([hex_number, integer(min: 1), neg_integer, identifier, binary])
       |> times(ignore(choice([string("\n"), string(" ")])), min: 1),
       min: 1
     )
@@ -34,5 +50,4 @@ defmodule P do
     |> post_traverse(:wrap_it)
 
   defparsec(:simple_forth, times(definition, min: 1))
-  defparsec(:binary, binary)
 end

@@ -72,6 +72,7 @@ defmodule MiniForth do
     raw =
       code
       |> C.parse()
+      # |> IO.inspect()
       |> C.replace()
 
     main =
@@ -99,6 +100,7 @@ defmodule MiniForth do
   end
 
   defp print_stacks({m, a}) do
+    IO.puts("")
     IO.puts("MainStack: " <> inspect(m))
     IO.puts("AltStack:  " <> inspect(a))
     IO.puts("")
