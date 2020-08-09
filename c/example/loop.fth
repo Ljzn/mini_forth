@@ -5,6 +5,9 @@
         endif
     loop drop fas ;
 
-: main 4 factorial ;
-
 : test 4 factorial 24 =! ;
+
+: nested 5 1 do 5 1 do i j * loop loop ;
+
+: main nested ;
+

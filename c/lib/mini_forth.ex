@@ -79,7 +79,7 @@ defmodule MiniForth do
       |> Map.get(:main)
 
     if main do
-      IO.puts("Raw script: \n" <> inspect(main) <> "\n")
+      IO.puts("Raw script: \n" <> inspect(main, limit: :infinity) <> "\n")
 
       main
       |> :interpreter.eval()
@@ -92,7 +92,7 @@ defmodule MiniForth do
 
     if test do
       case test |> :interpreter.eval() do
-        :ok -> :ok
+        :ok -> IO.puts("Test failed.")
         _X -> IO.puts("Test passed.")
       end
     end
@@ -105,6 +105,6 @@ defmodule MiniForth do
   end
 end
 
-if Mix.env() !== :test do
+if Mix.env() == :dev do
   MiniForth.main(System.argv())
 end

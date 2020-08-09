@@ -14,7 +14,8 @@ defmodule P do
 
   defp to_type(x), do: x
 
-  identifier = ascii_string([?a..?z, ?A..?Z, ?0..?9, ?=, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<], min: 1)
+  identifier =
+    ascii_string([?a..?z, ?A..?Z, ?0..?9, ?=, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<, ?&, ?|], min: 1)
 
   binary =
     ignore(string("\"")) |> utf8_string([not: 34], min: 1) |> ignore(string("\"")) |> tag(:binary)

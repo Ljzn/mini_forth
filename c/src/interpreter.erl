@@ -20,13 +20,13 @@ eval(['/' | C], [Y, X | M], A) ->
 eval(['%' | C], [Y, X | M], A) ->
     eval(C, [X rem Y | M], A);
 eval(['>' | C], [Y, X | M], A) ->
-    eval(C, [X > Y | M], A);
+    eval(C, [bool(X > Y) | M], A);
 eval(['<' | C], [Y, X | M], A) ->
-    eval(C, [X < Y | M], A);
+    eval(C, [bool(X < Y) | M], A);
 eval(['>=' | C], [Y, X | M], A) ->
-    eval(C, [X >= Y | M], A);
+    eval(C, [bool(X >= Y) | M], A);
 eval(['<=' | C], [Y, X | M], A) ->
-    eval(C, [X =< Y | M], A);
+    eval(C, [bool(X =< Y) | M], A);
 eval(['&' | C], [Y, X | M], A) ->
     eval(C, [X band Y | M], A);
 eval(['|' | C], [Y, X | M], A) ->
@@ -83,6 +83,9 @@ op('=!', _C, [Y, X | _M]) ->
 	      "~p~n",
 	      [Y, X]).
 
+bool(true) -> 1;
+bool(false) -> 0.
+
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),
      binary:part(B, 0, P)].
@@ -115,34 +118,35 @@ split_branch([X | R], T, F, L, f) ->
 
 %% Loop Unroll (not support nested loop)
 
-unroll(S) -> unroll_loop(S, []).
+unroll(S) -> unroll_loop(S, [], 0).
 
-unroll_loop([do | C], [S, E | M]) ->
+unroll_loop([do | C], [S, E | M], J) ->
     {P, C1} = find_loop_part(C, 0, []),
-    C2 = loops(P, S, E, [], S) ++ C1,
-    unroll_loop(C2, M);
-unroll_loop([H | C], M) -> unroll_loop(C, [H | M]);
-unroll_loop([], M) -> lists:reverse(M).
+    C2 = loops(P, S, E, [], S, J) ++ C1,
+    unroll_loop(C2, M, J);
+unroll_loop([H | C], M, J) -> unroll_loop(C, [H | M], J);
+unroll_loop([], M, _J) -> lists:reverse(M).
 
 find_loop_part([loop | C], 0, P) ->
     {lists:reverse(P), C};
 find_loop_part([do | C], L, P) ->
-    find_loop_part(C, L + 1, P);
+    find_loop_part(C, L + 1, [do | P]);
 find_loop_part([loop | C], L, P) ->
-    find_loop_part(C, L - 1, P);
+    find_loop_part(C, L - 1, [loop | P]);
 find_loop_part([X | C], L, P) ->
     find_loop_part(C, L, [X | P]).
 
-loops(_P, S, E, R, _I) when S >= E ->
+loops(_P, S, E, R, _I, _J) when S >= E ->
     lists:flatten(lists:reverse(R));
-loops(P, S, E, R, I) ->
-    loops(P, S + 1, E, [set_i(P, I) | R], I + 1).
+loops(P, S, E, R, I, J) ->
+    loops(P, S + 1, E, [set_ij(unroll_loop(P, [], I), I, J) | R], I + 1, J).
 
-set_i(P, I) -> set_i(P, I, []).
+set_ij(P, I, J) -> set_ij(P, I, J, []).
 
-set_i([i | C], I, R) -> set_i(C, I, [I | R]);
-set_i([], _I, R) -> lists:reverse(R);
-set_i([H | C], I, R) -> set_i(C, I, [H | R]).
+set_ij([j | C], I, J, R) -> set_ij(C, I, J, [J | R]);
+set_ij([i | C], I, J, R) -> set_ij(C, I, J, [I | R]);
+set_ij([], _I, _J, R) -> lists:reverse(R);
+set_ij([H | C], I, J, R) -> set_ij(C, I, J, [H | R]).
 
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
