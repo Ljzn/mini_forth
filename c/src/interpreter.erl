@@ -52,6 +52,8 @@ eval(['if' | C], [H | M], A) ->
 eval([nop | C], M, A) -> eval(C, M, A);
 eval([split | C], [P, B | M], A) ->
     eval(C, split(B, P) ++ M, A);
+eval([cat | C], [Y, X | M], A) ->
+    eval(C, [<<X/binary, Y/binary>> | M], A);
 eval([swap | C], [X, Y | M], A) ->
     eval(C, [Y, X | M], A);
 eval([drop | C], [_X | M], A) -> eval(C, M, A);
@@ -166,7 +168,7 @@ do_bin2num(<<1:1, D/bits>>) ->
 do_bin2num(<<0:1, _D/bits>> = B) ->
     binary:decode_unsigned(B).
 
-num2bin(N) when N > 0 ->
+num2bin(N) when N >= 0 ->
     B = <<N/big>>,
     B1 = case B of
 	   <<1:1, _X/bits>> -> <<0:8, B/bits>>;

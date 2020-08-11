@@ -3,7 +3,7 @@ defmodule P do
 
   defp wrap_it(_rest, args, context, _line, _offset) do
     [k | v] = args |> Enum.drop(1) |> Enum.reverse() |> Enum.drop(1) |> Enum.map(&to_type/1)
-    {[{k, v |> List.flatten()}], context}
+    {[{k, v |> List.flatten() |> Enum.reject(&is_nil/1)}], context}
   end
 
   defp to_type({:binary, bin}), do: bin
@@ -12,6 +12,8 @@ defmodule P do
     {int, ""} = Integer.parse(hex, 16)
     int
   end
+
+  defp to_type({:comment, x}), do: IO.inspect(x)
 
   defp to_type({:neg_integer, [int]}), do: -int
 
@@ -33,8 +35,14 @@ defmodule P do
     |> ascii_string([?a..?f, ?A..?F, ?0..?9], min: 1)
     |> tag(:hex_number)
 
+  comment =
+    ignore(string("("))
+    |> ascii_string([not: ?)], min: 0)
+    |> ignore(string(")"))
+    |> tag(:comment)
+
   binary =
-    ignore(string("\"")) |> utf8_string([not: 34], min: 1) |> ignore(string("\"")) |> tag(:binary)
+    ignore(string("\"")) |> utf8_string([not: 34], min: 0) |> ignore(string("\"")) |> tag(:binary)
 
   definition =
     string(":")
@@ -45,6 +53,8 @@ defmodule P do
       min: 1
     )
     |> string(";")
+    |> repeat(ignore(string(" ")))
+    |> optional(ignore(comment))
     |> repeat(ignore(choice([string("\n"), string(" ")])))
     |> lookahead(ignore(choice([eos(), string(":")])))
     |> post_traverse(:wrap_it)
