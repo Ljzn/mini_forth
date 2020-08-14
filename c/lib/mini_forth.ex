@@ -80,7 +80,7 @@ defmodule MiniForth do
       |> Map.get(:main)
 
     if main do
-      IO.puts("Raw script: \n" <> inspect(main, limit: :infinity) <> "\n")
+      IO.puts("Raw script: \n" <> inspect(C.to_asm_string(main), limit: :infinity) <> "\n")
 
       main
       |> :interpreter.eval()

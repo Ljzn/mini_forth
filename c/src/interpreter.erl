@@ -41,7 +41,13 @@ eval([min | C], [Y, X | M], A) ->
 eval([max | C], [Y, X | M], A) ->
     eval(C, [max(X, Y) | M], A);
 eval([X | C], M, A)
-    when is_integer(X) or is_binary(X) ->
+    when is_integer(X), X >= 0, X =< 16 ->
+    eval(C, [X | M], A);
+eval([X | C], M, A)
+    when is_integer(X) ->
+    eval(C, [binary:encode_unsigned(X) | M], A);
+eval([X | C], M, A)
+    when is_binary(X) ->
     eval(C, [X | M], A);
 eval([over | C], [X, Y | M], A) ->
     eval(C, [Y, X, Y | M], A);

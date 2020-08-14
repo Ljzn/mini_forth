@@ -1,6 +1,6 @@
 : vec "" ; ( -- bytes )
 
-: push 1 num2bin cat ; ( bytes x -- bytesx )
+: push cat ; ( bytes x -- bytesx )
 
 : at swap dup rot split nip 1 split drop ; ( bytes index -- bytes x )
 

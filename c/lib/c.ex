@@ -75,4 +75,23 @@ defmodule C do
     end
     |> List.flatten()
   end
+
+  def to_asm_string(list) do
+    Enum.map(list, &do_to_asm_string/1)
+    |> Enum.join(" ")
+  end
+
+  defp do_to_asm_string(""), do: "OP_0"
+  defp do_to_asm_string(:+), do: "OP_ADD"
+  defp do_to_asm_string(:-), do: "OP_SUB"
+  defp do_to_asm_string(:*), do: "OP_MUL"
+  defp do_to_asm_string(:/), do: "OP_DIV"
+
+  defp do_to_asm_string(atom) when is_atom(atom),
+    do: "OP_" <> (to_string(atom) |> String.upcase())
+
+  defp do_to_asm_string(-1), do: "OP_1NEGATE"
+  defp do_to_asm_string(x) when x in 0..16, do: "OP_#{x}"
+  defp do_to_asm_string(x) when is_integer(x), do: Integer.to_string(x, 16) |> String.downcase()
+  defp do_to_asm_string(x) when is_binary(x), do: Base.encode16(x, case: :lower)
 end
