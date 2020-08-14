@@ -40,12 +40,14 @@ defmodule P do
     |> ascii_string([not: ?)], min: 0)
     |> ignore(string(")"))
     |> tag(:comment)
+    |> repeat(ignore(choice([string("\n"), string(" ")])))
 
   binary =
     ignore(string("\"")) |> utf8_string([not: 34], min: 0) |> ignore(string("\"")) |> tag(:binary)
 
   definition =
-    string(":")
+    ignore(repeat(comment))
+    |> string(":")
     |> ignore(string(" "))
     |> times(
       choice([hex_number, integer(min: 1), neg_integer, identifier, binary])
@@ -56,6 +58,7 @@ defmodule P do
     |> repeat(ignore(string(" ")))
     |> optional(ignore(comment))
     |> repeat(ignore(choice([string("\n"), string(" ")])))
+    |> optional(ignore(comment))
     |> lookahead(ignore(choice([eos(), string(":")])))
     |> post_traverse(:wrap_it)
 

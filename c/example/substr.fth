@@ -1,3 +1,5 @@
+( substring )
+
 : left split drop ;
 
 : right split nip ;
