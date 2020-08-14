@@ -30,7 +30,7 @@ defmodule C do
     {:ok, result, _, _, _, _} = P.simple_forth(str)
 
     for {k, v} <- result, into: %{} do
-      {k, :interpreter.unroll(v)}
+      {k, :compiler.unroll(v)}
     end
   end
 
