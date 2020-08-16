@@ -1,6 +1,6 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, num2bin/1, test/0]).
+-export([bin2num/1, eval/1, eval/3, simple_eval/1, num2bin/1, test/0]).
 
 eval(S) -> eval(S, [], []).
 
@@ -39,12 +39,14 @@ eval([min | C], [Y, X | M], A) ->
     eval(C, [min(X, Y) | M], A);
 eval([max | C], [Y, X | M], A) ->
     eval(C, [max(X, Y) | M], A);
-eval([X | C], M, A)
-    when is_integer(X), X >= 0, X =< 16 ->
-    eval(C, [X | M], A);
+eval([size | C], [X | M], A) ->
+    eval(C, [byte_size(X), X | M], A);
 eval([X | C], M, A)
     when is_integer(X) ->
-    eval(C, [binary:encode_unsigned(X) | M], A);
+    eval(C, [X | M], A);
+% eval([X | C], M, A)
+%     when is_integer(X) ->
+%     eval(C, [binary:encode_unsigned(X) | M], A);
 eval([X | C], M, A)
     when is_binary(X) ->
     eval(C, [X | M], A);
@@ -138,14 +140,14 @@ do_bin2num(<<0:1, _D/bits>> = B) ->
     binary:decode_unsigned(B).
 
 num2bin(N) when N >= 0 ->
-    B = <<N/big>>,
+    B = binary:encode_unsigned(N),
     B1 = case B of
 	   <<1:1, _X/bits>> -> <<0:8, B/bits>>;
 	   <<0:1, _X/bits>> -> B
 	 end,
     flip_endian(B1);
 num2bin(N) ->
-    B = <<(-N)/big>>,
+    B = binary:encode_unsigned(-N),
     B1 = case B of
 	   <<1:1, _X/bits>> -> <<1:1, 0:7, B/bits>>;
 	   <<0:1, X/bits>> -> <<1:1, X/bits>>

@@ -72,8 +72,10 @@ defmodule MiniForth do
     raw =
       code
       |> C.parse()
-      # |> IO.inspect()
       |> C.replace()
+      |> C.compile()
+
+    # |> IO.inspect()
 
     main =
       raw

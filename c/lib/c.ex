@@ -27,10 +27,17 @@ defmodule C do
 
   """
   def parse(str) do
+    # delete \ comments
+    str =
+      str
+      |> String.split("\n")
+      |> Enum.reject(fn x -> String.starts_with?(x, "\\") end)
+      |> Enum.join("\n")
+
     {:ok, result, _, _, _, _} = P.simple_forth(str)
 
     for {k, v} <- result, into: %{} do
-      {k, :compiler.unroll(v)}
+      {k, v}
     end
   end
 
@@ -93,6 +100,18 @@ defmodule C do
 
   defp do_to_asm_string(-1), do: "OP_1NEGATE"
   defp do_to_asm_string(x) when x in 0..16, do: "OP_#{x}"
-  defp do_to_asm_string(x) when is_integer(x), do: Integer.to_string(x, 16) |> String.downcase()
+
+  defp do_to_asm_string(x) when is_integer(x),
+    do: x |> IO.inspect() |> :interpreter.num2bin() |> Base.encode16(case: :lower) |> IO.inspect()
+
   defp do_to_asm_string(x) when is_binary(x), do: Base.encode16(x, case: :lower)
+
+  def compile(map) do
+    for {k, v} <- map, into: %{} do
+      {k,
+       v
+       |> :compiler.compile_literal()
+       |> :compiler.unroll()}
+    end
+  end
 end
