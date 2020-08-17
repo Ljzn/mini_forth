@@ -96,7 +96,11 @@ op('.', C, [X | M]) ->
     {C, M};
 op(cr, C, M) ->
     io:format("~n", []),
-    {C, M}.
+    {C, M};
+op(pf_inv, C, [X | M]) ->
+    {C, [b_crypto:pf_inv(X) | M]};
+op(rand_bytes, C, [X | M]) ->
+    {C, [crypto:strong_rand_bytes(X) | M]}.
 
 bool(true) -> 1;
 bool(false) -> 0.

@@ -102,7 +102,7 @@ defmodule C do
   defp do_to_asm_string(x) when x in 0..16, do: "OP_#{x}"
 
   defp do_to_asm_string(x) when is_integer(x),
-    do: x |> IO.inspect() |> :interpreter.num2bin() |> Base.encode16(case: :lower) |> IO.inspect()
+    do: x |> :interpreter.num2bin() |> Base.encode16(case: :lower)
 
   defp do_to_asm_string(x) when is_binary(x), do: Base.encode16(x, case: :lower)
 
