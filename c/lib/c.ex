@@ -98,6 +98,7 @@ defmodule C do
   defp do_to_asm_string(:/), do: "OP_DIV"
   defp do_to_asm_string(:%), do: "OP_MOD"
   defp do_to_asm_string(:=), do: "OP_EQUAL"
+  defp do_to_asm_string(:"=verify"), do: "OP_EQUALVERIFY"
 
   defp do_to_asm_string(atom) when is_atom(atom),
     do: "OP_" <> (to_string(atom) |> String.upcase())

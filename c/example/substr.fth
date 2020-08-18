@@ -10,4 +10,4 @@
 
 : main "I am a fish" 2 2 substr ;
 
-: test main "am" =! ;
+: test main "am" =verify ;

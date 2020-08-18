@@ -83,10 +83,10 @@ op(dup, C, [H | M]) -> {C, [H, H | M]};
 op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]};
 op('=', C, [X, X | M]) -> {C, [1 | M]};
 op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
-op('!', _C, [0 | _M]) -> io:format("verify failed.");
-op('!', C, [_X | M]) -> {C, M};
-op('=!', C, [X, X | M]) -> {C, M};
-op('=!', _C, [Y, X | _M]) ->
+op('verify', _C, [0 | _M]) -> io:format("verify failed.");
+op('verify', C, [_X | M]) -> {C, M};
+op('=verify', C, [X, X | M]) -> {C, M};
+op('=verify', _C, [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
 	      "~p~n",
 	      [Y, X]);
