@@ -85,6 +85,15 @@ op('=', C, [X, X | M]) -> {C, [1 | M]};
 op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
 op('verify', _C, [0 | _M]) -> io:format("verify failed.");
 op('verify', C, [_X | M]) -> {C, M};
+op('num=verify', C, [Y, X | M]) ->
+    case bin2num(Y) == bin2num(X) of
+        true ->
+            {C, M};
+        false ->
+            io:format("equal_verify failed.\ntop: ~p, second: "
+	        "~p~n",
+	        [Y, X])
+    end;
 op('=verify', C, [X, X | M]) -> {C, M};
 op('=verify', _C, [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
@@ -135,6 +144,7 @@ split_branch([X | R], T, F, L, t) ->
 split_branch([X | R], T, F, L, f) ->
     split_branch(R, T, [X | F], L, f).
 
+bin2num(B) when is_integer(B) -> B;
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
 do_bin2num(<<1:1, D/bits>>) ->
