@@ -1,13 +1,12 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, simple_eval/1, num2bin/1, test/0]).
+-export([bin2num/1, eval/1, eval/3, num2bin/1,
+	 simple_eval/1, test/0]).
 
 eval(S) -> eval(S, [], []).
 
-eval([tas | C], [X | M], A) ->
-    eval(C, M, [X | A]);
-eval([fas | C], M, [X | A]) ->
-    eval(C, [X | M], A);
+eval([tas | C], [X | M], A) -> eval(C, M, [X | A]);
+eval([fas | C], M, [X | A]) -> eval(C, [X | M], A);
 eval(['+' | C], [Y, X | M], A) ->
     eval(C, [X + Y | M], A);
 eval(['-' | C], [Y, X | M], A) ->
@@ -41,15 +40,15 @@ eval([max | C], [Y, X | M], A) ->
     eval(C, [max(X, Y) | M], A);
 eval([size | C], [X | M], A) ->
     eval(C, [byte_size(X), X | M], A);
-eval([X | C], M, A)
-    when is_integer(X) ->
+eval([X | C], M, A) when is_integer(X) ->
     eval(C, [X | M], A);
 % eval([X | C], M, A)
 %     when is_integer(X) ->
 %     eval(C, [binary:encode_unsigned(X) | M], A);
-eval([X | C], M, A)
-    when is_binary(X) ->
+eval([X | C], M, A) when is_binary(X) ->
     eval(C, [X | M], A);
+eval([pick | C], [N | M], A) ->
+    M1 = pick(M, N), eval(C, M1, A);
 eval([over | C], [X, Y | M], A) ->
     eval(C, [Y, X, Y | M], A);
 eval([nip | C], [X, _Y | M], A) -> eval(C, [X | M], A);
@@ -91,19 +90,20 @@ op('=!', _C, [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
 	      "~p~n",
 	      [Y, X]);
-op('.', C, [X | M]) ->
-    io:format("~p ", [X]),
-    {C, M};
-op(cr, C, M) ->
-    io:format("~n", []),
-    {C, M};
-op(pf_inv, C, [X | M]) ->
-    {C, [b_crypto:pf_inv(X) | M]};
+op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
+op(cr, C, M) -> io:format("~n", []), {C, M};
+op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
 op(rand_bytes, C, [X | M]) ->
     {C, [crypto:strong_rand_bytes(X) | M]}.
 
 bool(true) -> 1;
 bool(false) -> 0.
+
+pick(M, N) -> do_pick(M, N, []).
+
+do_pick([H | M], 0, A) ->
+    [H | lists:reverse(A) ++ [H | M]];
+do_pick([H | M], N, A) -> do_pick(M, N - 1, [H | A]).
 
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),
@@ -134,7 +134,6 @@ split_branch([X | R], T, F, L, t) ->
     split_branch(R, [X | T], F, L, t);
 split_branch([X | R], T, F, L, f) ->
     split_branch(R, T, [X | F], L, f).
-
 
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
@@ -176,8 +175,7 @@ flip_endian(B) ->
 
 simple_eval(C) -> hd(element(1, eval(C))).
 
-test() ->
-    test1(), test2(), test3(), test4(), test5().
+test() -> test1(), test2(), test3(), test4(), test5().
 
 test1() ->
     List = [{255, <<255, 0>>}, {1, <<1>>}, {127, <<127>>},
@@ -211,5 +209,3 @@ test4() ->
 test5() ->
     <<2, 0, 0, 0>> = simple_eval([2, 4, num2bin]),
     <<5, 0, 0, 128>> = simple_eval([-5, 4, num2bin]).
-
-

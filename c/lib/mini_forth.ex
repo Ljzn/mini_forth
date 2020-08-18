@@ -67,10 +67,11 @@ defmodule MiniForth do
   end
 
   defp try_to_run_sv_code(arg) do
+    core = File.read!("example/core.fth")
     code = File.read!(arg)
 
     raw =
-      code
+      (core <> code)
       |> C.parse()
       |> C.replace()
       |> C.compile()
