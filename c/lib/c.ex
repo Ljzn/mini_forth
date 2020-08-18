@@ -98,6 +98,8 @@ defmodule C do
   defp do_to_asm_string(:/), do: "OP_DIV"
   defp do_to_asm_string(:%), do: "OP_MOD"
   defp do_to_asm_string(:=), do: "OP_EQUAL"
+  defp do_to_asm_string(:fas), do: "OP_FROMALTSTACK"
+  defp do_to_asm_string(:tas), do: "OP_TOALTSTACK"
   defp do_to_asm_string(:"=verify"), do: "OP_EQUALVERIFY"
   defp do_to_asm_string(:"num=verify"), do: "OP_NUMEQUALVERIFY"
 

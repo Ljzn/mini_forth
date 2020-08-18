@@ -84,6 +84,8 @@ op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]};
 op('=', C, [X, X | M]) -> {C, [1 | M]};
 op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
 op('verify', _C, [0 | _M]) -> io:format("verify failed.");
+op('verify', _C, [false | _M]) -> io:format("verify failed.");
+op('verify', _C, [<<>> | _M]) -> io:format("verify failed.");
 op('verify', C, [_X | M]) -> {C, M};
 op('num=verify', C, [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
@@ -99,6 +101,12 @@ op('=verify', _C, [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
 	      "~p~n",
 	      [Y, X]);
+op('checksignverify', C, M) ->
+    % TODO
+    {C, M};
+op('checkmultisignverify', C, M) ->
+    % TODO
+    {C, M};
 op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
 op(cr, C, M) -> io:format("~n", []), {C, M};
 op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};

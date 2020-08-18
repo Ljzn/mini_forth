@@ -104,8 +104,8 @@ defmodule MiniForth do
 
   defp print_stacks({m, a}) do
     IO.puts("")
-    IO.puts("MainStack: " <> inspect(m))
-    IO.puts("AltStack:  " <> inspect(a))
+    IO.puts("MainStack: " <> inspect(Enum.reverse(m)))
+    IO.puts("AltStack:  " <> inspect(Enum.reverse(a)))
     IO.puts("")
   end
 end
