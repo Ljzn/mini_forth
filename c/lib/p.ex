@@ -31,7 +31,10 @@ defmodule P do
       min: 1
     )
 
-  neg_integer = ignore(string("-")) |> integer(min: 1) |> tag(:neg_integer)
+  pos_integer = integer(min: 1) |> lookahead(string(" "))
+
+  neg_integer =
+    ignore(string("-")) |> integer(min: 1) |> lookahead(string(" ")) |> tag(:neg_integer)
 
   hex_number =
     ignore(string("0x"))
@@ -66,7 +69,7 @@ defmodule P do
     |> string(":")
     |> ignore(string(" "))
     |> times(
-      choice([hex_number, integer(min: 1), neg_integer, binary_list, identifier, binary])
+      choice([hex_number, pos_integer, neg_integer, binary_list, identifier, binary])
       |> times(ignore(choice([string("\n"), string(" ")])), min: 1),
       min: 1
     )
@@ -78,5 +81,5 @@ defmodule P do
     |> lookahead(ignore(choice([eos(), string(":")])))
     |> post_traverse(:wrap_it)
 
-  defparsec(:simple_forth, times(definition, min: 1))
+  defparsec(:simple_forth, times(definition, min: 1) |> eos())
 end

@@ -39,6 +39,8 @@ defmodule C do
     for {k, v} <- result, into: %{} do
       {k, v}
     end
+
+    # |> IO.inspect(label: "parsed", limit: :infinity)
   end
 
   @doc """
@@ -53,6 +55,7 @@ defmodule C do
   """
   def replace(map) do
     do_replace(map, 0)
+    # |> IO.inspect(label: "replaced", limit: :infinity)
   end
 
   defp do_replace(_map, 100), do: raise("reach max replace limit")
@@ -94,6 +97,7 @@ defmodule C do
   defp do_to_asm_string(:*), do: "OP_MUL"
   defp do_to_asm_string(:/), do: "OP_DIV"
   defp do_to_asm_string(:%), do: "OP_MOD"
+  defp do_to_asm_string(:=), do: "OP_EQUAL"
 
   defp do_to_asm_string(atom) when is_atom(atom),
     do: "OP_" <> (to_string(atom) |> String.upcase())
