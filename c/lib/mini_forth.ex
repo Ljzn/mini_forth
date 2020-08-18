@@ -76,14 +76,18 @@ defmodule MiniForth do
       |> C.replace()
       |> C.compile()
 
-    # |> IO.inspect()
+    raw_without_core =
+      code
+      |> C.parse()
+      |> C.replace()
+      |> C.compile()
 
     main =
       raw
       |> Map.get(:main)
 
     if main do
-      IO.puts("Raw script: \n" <> inspect(C.to_asm_string(main), limit: :infinity) <> "\n")
+      IO.puts("Raw script: \n" <> inspect(C.to_asm_string(raw_without_core.main), limit: :infinity) <> "\n")
 
       main
       |> :interpreter.eval()

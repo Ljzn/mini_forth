@@ -1,1 +1,1 @@
-: main 1 2 3 3dup ;
+: main 1 2 3 3dup ifdup 0 ifdup 2over tuck ;
