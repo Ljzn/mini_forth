@@ -17,8 +17,6 @@ eval(['/' | C], [Y, X | M], A) ->
     eval(C, [X div Y | M], A);
 eval(['%' | C], [Y, X | M], A) ->
     eval(C, [X rem Y | M], A);
-eval(['>' | C], [Y, X | M], A) ->
-    eval(C, [bool(X > Y) | M], A);
 eval(['<' | C], [Y, X | M], A) ->
     eval(C, [bool(X < Y) | M], A);
 eval(['>=' | C], [Y, X | M], A) ->
@@ -34,8 +32,6 @@ eval(['not' | C], [X | M], A) ->
     eval(C, [logic_not(X) | M], A);
 eval(['xor' | C], [Y, X | M], A) ->
     eval(C, [X bxor Y | M], A);
-eval([max | C], [Y, X | M], A) ->
-    eval(C, [max(X, Y) | M], A);
 eval([size | C], [X | M], A) ->
     eval(C, [byte_size(X), X | M], A);
 eval([X | C], M, A) when is_integer(X) ->

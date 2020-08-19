@@ -11,3 +11,5 @@
 : 1add 1 + ;
 : 1sub 1 - ;
 : min 2dup < if drop else nip endif ;
+: max 2dup > if drop else nip endif ;
+: > swap < ;
