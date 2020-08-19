@@ -34,8 +34,6 @@ eval(['not' | C], [X | M], A) ->
     eval(C, [logic_not(X) | M], A);
 eval(['xor' | C], [Y, X | M], A) ->
     eval(C, [X bxor Y | M], A);
-eval([min | C], [Y, X | M], A) ->
-    eval(C, [min(X, Y) | M], A);
 eval([max | C], [Y, X | M], A) ->
     eval(C, [max(X, Y) | M], A);
 eval([size | C], [X | M], A) ->
@@ -51,7 +49,6 @@ eval([pick | C], [N | M], A) ->
     M1 = pick(M, N), eval(C, M1, A);
 eval([over | C], [X, Y | M], A) ->
     eval(C, [Y, X, Y | M], A);
-eval([nip | C], [X, _Y | M], A) -> eval(C, [X | M], A);
 eval(['if' | C], [H | M], A) ->
     {T, F, R} = branches(C),
     eval(choose(H, T, F) ++ R, M, A);
@@ -80,7 +77,6 @@ op(negate, C, [H | M]) -> {C, [-H | M]};
 op(bin2num, C, [H | M]) -> {C, [bin2num(H) | M]};
 op(num2bin, C, [Y, X | M]) -> {C, [num2bin(X, Y) | M]};
 op(dup, C, [H | M]) -> {C, [H, H | M]};
-op(rot, C, [X3, X2, X1 | M]) -> {C, [X1, X3, X2 | M]};
 op('=', C, [X, X | M]) -> {C, [1 | M]};
 op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
 op('verify', _C, [0 | _M]) -> io:format("verify failed.");

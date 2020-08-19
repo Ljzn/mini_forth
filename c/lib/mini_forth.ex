@@ -67,11 +67,11 @@ defmodule MiniForth do
   end
 
   defp try_to_run_sv_code(arg) do
-    core = File.read!("example/core.fth")
+    core = File.read!("core/core.fth")
     code = File.read!(arg)
 
     raw =
-      (core <> code)
+      (core <> "\n" <> code)
       |> C.parse()
       |> C.replace()
       |> C.compile()
@@ -87,7 +87,10 @@ defmodule MiniForth do
       |> Map.get(:main)
 
     if main do
-      IO.puts("Raw script: \n" <> inspect(C.to_asm_string(raw_without_core.main), limit: :infinity) <> "\n")
+      IO.puts(
+        "Raw script: \n" <>
+          inspect(C.to_asm_string(raw_without_core.main), limit: :infinity) <> "\n"
+      )
 
       main
       |> :interpreter.eval()

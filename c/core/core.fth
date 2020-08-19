@@ -1,7 +1,13 @@
+: rot tas swap fas swap ;
 : 2dup over over ;
 : 3dup 2 pick 2 pick 2 pick ;
 : 2swap rot tas rot fas ;
 : 2rot tas tas 2swap fas fas 2swap ;
 : ifdup dup if dup endif ;
 : 2over tas tas 2dup fas fas 2swap ;
-: tuck dup rot swap ;
+: tuck swap over ;
+: 2drop drop drop ;
+: nip swap drop ;
+: 1add 1 + ;
+: 1sub 1 - ;
+: min 2dup < if drop else nip endif ;
