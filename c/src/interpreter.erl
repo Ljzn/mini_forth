@@ -105,10 +105,13 @@ op(cr, C, M) -> io:format("~n", []), {C, M};
 op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
 op(rand_bytes, C, [X | M]) ->
     {C, [crypto:strong_rand_bytes(X) | M]};
-op(call, C, [{quote, Q} | M]) ->
-    {C, lists:reverse(Q) ++ M};
 op({quote, _X} = Q, C, M) -> {C, [Q | M]};
-op(dip, C, M) -> pop(dip, C, M);
+op(call, C, M) -> 
+    io:format("CALL: ~p~n", [{C, M}]),
+    pop(call, C, M);
+op(dip, C, M) -> 
+    io:format("DIP: ~p~n", [{C, M}]),
+    pop(dip, C, M);
 op({inline, _X} = I, C, M) -> pop(I, C, M).
 
 preworks(C) -> preworks(C, [], []).
@@ -132,13 +135,13 @@ preworks([], M, _A) ->
     end.
 
 pop(call, C, [{quote, Q} | M]) -> {Q ++ C, M};
-pop(dip, C, [{quote, Q}, H | M]) ->
-    io:format("M: ~p~n", [M]),
-    M1 = [H | lists:reverse(Q) ++ M],
-    io:format("M1: ~p~n", [M1]),
-    {C, M1};
+pop(dip, C, [Q, H | M]) ->
+    {[Q, call, H | C], M};
 pop({inline, Code}, C, M) ->
-    {M1, _A1} = eval(Code, M, []), {C, M1};
+    io:format("Code ~p~n", [Code]),
+    {M1, _A1} = eval(Code, M, []),
+    io:format("~p~n", [M1]),
+    {C, M1};
 pop(call, C, M) -> io:format("ERROR: ~p~n", [{C, M}]);
 pop(_OP, _C, _M) -> missing.
 

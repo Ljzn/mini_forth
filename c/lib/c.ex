@@ -133,8 +133,9 @@ defmodule C do
     |> IO.inspect(label: "before expand")
     |> :expander.expand()
     |> IO.inspect(label: "after expand")
-    |> :interpreter.preworks()
-    |> IO.inspect(label: "after prework")
+    |> :expander.step()
+    # |> :interpreter.preworks()
+    # |> IO.inspect(label: "after prework")
   end
 
   defp expand_main(v, _), do: v

@@ -1,6 +1,6 @@
 -module(expander).
 
--export([expand/1]).
+-export([expand/1, step/1]).
 
 expand(C) ->
     C1 = check_inlines(C, []),
@@ -39,3 +39,27 @@ collect_inline([{quote, L} | C], R) ->
     collect_inline(C, [{quote, check_inlines(L, [])} | R]); 
 collect_inline([H | C], R) ->
     collect_inline(C, [H | R]). 
+
+step(C) ->
+    io:format("STEP: ~p~n", [C]),
+    s(C, []).
+
+s([{inline, Code} | T], R) ->
+    step(lists:reverse(R) ++ [{e, X} || X <- Code] ++ T);
+s([{e, X} | T], R) ->
+    step(lists:reverse(eval(X, R)) ++ T);
+s([dip | T], [Q, X, Y | R]) ->
+    step(lists:reverse(R) ++ [Y, Q, call, X] ++ T);
+s([call | T], [{quote, Q} | R]) ->
+    step(lists:reverse(R) ++ Q ++ T);
+s([H|T], R) ->
+    s(T, [H | R]);
+s([], R) ->
+    lists:reverse(R).
+
+eval(over, [X, Y | R]) ->
+    [Y, X, Y | R];
+eval(swap, [X, Y | R]) ->
+    [Y, X | R];
+eval(Op, R) ->
+    [Op | R].
