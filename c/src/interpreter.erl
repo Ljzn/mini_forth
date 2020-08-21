@@ -103,7 +103,14 @@ op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
 op(cr, C, M) -> io:format("~n", []), {C, M};
 op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
 op(rand_bytes, C, [X | M]) ->
-    {C, [crypto:strong_rand_bytes(X) | M]}.
+    {C, [crypto:strong_rand_bytes(X) | M]};
+op(call, C, [{quote, Q} | M]) ->
+    {Q ++ C, M};
+op({inline, P}, C, M) ->
+    {P ++ C, M};
+op({quote, _P} = Q, C, M) ->
+    C1 = expander:expand(C, [Q | M]),
+    {C1, []}.
 
 bool(true) -> 1;
 bool(false) -> 0.

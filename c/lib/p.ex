@@ -2,8 +2,21 @@ defmodule P do
   import NimbleParsec
 
   defp wrap_it(_rest, args, context, _line, _offset) do
-    [k | v] = args |> Enum.drop(1) |> Enum.reverse() |> Enum.drop(1) |> Enum.map(&to_type/1)
+    [k | v] =
+      args
+      |> IO.inspect(label: "wrap")
+      |> normalize_definition()
+
     {[{k, v |> List.flatten() |> Enum.reject(&is_nil/1)}], context}
+  end
+
+  defp normalize_definition(["inline" | d]) do
+    [k | v] = normalize_definition(d)
+    [k, :inline_start | v] ++ [:inline_end]
+  end
+
+  defp normalize_definition(d) do
+    d |> Enum.drop(1) |> Enum.reverse() |> Enum.drop(1) |> Enum.map(&to_type/1)
   end
 
   defp to_type({:binary, bin}), do: bin
@@ -75,6 +88,7 @@ defmodule P do
     )
     |> string(";")
     |> repeat(ignore(string(" ")))
+    |> optional(string("inline"))
     |> optional(ignore(comment))
     |> repeat(ignore(choice([string("\n"), string(" ")])))
     |> optional(ignore(comment))

@@ -34,7 +34,7 @@ defmodule C do
       |> Enum.reject(fn x -> String.starts_with?(x, "\\") end)
       |> Enum.join("\n")
 
-    {:ok, result, _, _, _, _} = P.simple_forth(str)
+    {:ok, result, _, _, _, _} = P.simple_forth(str) |> IO.inspect(lable: "after parse")
 
     for {k, v} <- result, into: %{} do
       {k, v}
@@ -118,8 +118,20 @@ defmodule C do
     for {k, v} <- map, into: %{} do
       {k,
        v
+       |> IO.inspect(label: "before literal")
        |> :compiler.compile_literal()
-       |> :compiler.unroll()}
+       |> IO.inspect(label: "after literal")
+       |> :compiler.unroll()
+       |> IO.inspect(label: "after unroll")
+       |> expand_main(k)
+       |> IO.inspect(label: "after expand")}
     end
   end
+
+  defp expand_main(v, :main) do
+    IO.inspect(v, label: "before expand")
+    :expander.expand(v)
+  end
+
+  defp expand_main(v, _), do: v
 end

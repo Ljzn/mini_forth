@@ -4,24 +4,29 @@
 
 
 compile_literal(S) ->
-    literal(S, [], [], false).
+    literal(S, []).
 
-literal([literal | C], M, L, false) ->
+literal([literal | C], M) ->
     M1 = execute_latest_quote(M, []),
-    literal(C, M1, L, false);
-literal([literal | _C], _M, _L, true) -> error_doulbe_literal;
-literal(['[' | C], M, L, false) ->
-    literal(C, M, L, true);
-literal(['[' | _C], _M, _L, true) -> error_double_macro;
-literal([']' | C], M, L, true) ->
-    literal(C, [quote(lists:reverse(L)) | M], [], false);
-literal([']' | _C], _M, _L, false) -> error_wrong_right_brick;
-literal([H | C], M, L, true) ->
-    literal(C, M, [H | L], true);
-literal([H | C], M, L, false) ->
-    literal(C, [H | M], L, false);
-literal([], M, _L, _B) ->
+    literal(C, M1);
+literal(['[' | C], M) ->
+    {Q, R} = find_quote_end(C, [], 0),
+    literal(R, [quote(compile_literal(Q)) | M]);
+literal([']' | _C], _M) ->
+    error_unexpected_quote_end;
+literal([H | C], M) ->
+    literal(C, [H|M]);
+literal([], M) ->
     lists:reverse(M).
+
+find_quote_end([']' | C], L, 0) ->
+    {lists:reverse(L), C};
+find_quote_end([']' | C], L, F) ->
+    find_quote_end(C, [']' | L], F-1);
+find_quote_end(['[' | C], L, F) ->
+    find_quote_end(C, ['[' | L], F+1);
+find_quote_end([H | C], L, F) ->
+    find_quote_end(C, [H | L], F).
 
 quote(L) ->
     {quote, L}.
