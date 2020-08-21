@@ -17,6 +17,4 @@ defmodule M do
   def handle_cast({:save, location, data}, state) do
     {:noreply, Map.put(state, location, data)}
   end
-
-
 end

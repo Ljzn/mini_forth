@@ -4,23 +4,34 @@
 
 
 compile_literal(S) ->
-    literal(S, [], [], false, 0).
+    literal(S, [], [], false).
 
-literal([literal | C], M, L, false, R) ->
-    literal(C, [R | M], L, false, 0);
-literal([literal | _C], _M, _L, true, _R) -> error_doulbe_literal;
-literal(['[' | C], M, L, false, R) ->
-    literal(C, M, L, true, R);
-literal(['[' | _C], _M, _L, true, _R) -> error_double_macro;
-literal([']' | C], M, L, true, _R) ->
-    literal(C, M, [], false, interpreter:simple_eval(lists:reverse(L)));
-literal([']' | _C], _M, _L, false, _R) -> error_wrong_right_brick;
-literal([H | C], M, L, true, R) ->
-    literal(C, M, [H | L], true, R);
-literal([H | C], M, L, false, R) ->
-    literal(C, [H | M], L, false, R);
-literal([], M, _L, _B, _R) ->
+literal([literal | C], M, L, false) ->
+    M1 = execute_latest_quote(M, []),
+    literal(C, M1, L, false);
+literal([literal | _C], _M, _L, true) -> error_doulbe_literal;
+literal(['[' | C], M, L, false) ->
+    literal(C, M, L, true);
+literal(['[' | _C], _M, _L, true) -> error_double_macro;
+literal([']' | C], M, L, true) ->
+    literal(C, [quote(lists:reverse(L)) | M], [], false);
+literal([']' | _C], _M, _L, false) -> error_wrong_right_brick;
+literal([H | C], M, L, true) ->
+    literal(C, M, [H | L], true);
+literal([H | C], M, L, false) ->
+    literal(C, [H | M], L, false);
+literal([], M, _L, _B) ->
     lists:reverse(M).
+
+quote(L) ->
+    {quote, L}.
+
+execute_latest_quote([{quote, L} | M], R) ->
+    lists:reverse(R) ++ [interpreter:simple_eval(L) | M];
+execute_latest_quote([H | M], R) ->
+    execute_latest_quote(M, [H | R]);
+execute_latest_quote([], R) ->
+    lists:reverse([0 | R]).
 
 %% Loop Unroll (not support nested loop)
 
