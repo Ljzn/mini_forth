@@ -4,7 +4,7 @@ defmodule P do
   defp wrap_it(_rest, args, context, _line, _offset) do
     [k | v] =
       args
-      |> IO.inspect(label: "wrap")
+      # |> IO.inspect(label: "wrap")
       |> normalize_definition()
 
     {[{k, v |> List.flatten() |> Enum.reject(&is_nil/1)}], context}

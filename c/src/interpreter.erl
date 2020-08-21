@@ -1,7 +1,7 @@
 -module(interpreter).
 
 -export([bin2num/1, eval/1, eval/3, num2bin/1,
-	 simple_eval/1, test/0]).
+	 preworks/1, simple_eval/1, test/0]).
 
 eval(S) -> eval(S, [], []).
 
@@ -75,28 +75,29 @@ op(num2bin, C, [Y, X | M]) -> {C, [num2bin(X, Y) | M]};
 op(dup, C, [H | M]) -> {C, [H, H | M]};
 op('=', C, [X, X | M]) -> {C, [1 | M]};
 op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
-op('verify', _C, [0 | _M]) -> io:format("verify failed.");
-op('verify', _C, [false | _M]) -> io:format("verify failed.");
-op('verify', _C, [<<>> | _M]) -> io:format("verify failed.");
-op('verify', C, [_X | M]) -> {C, M};
+op(verify, _C, [0 | _M]) -> io:format("verify failed.");
+op(verify, _C, [false | _M]) ->
+    io:format("verify failed.");
+op(verify, _C, [<<>> | _M]) ->
+    io:format("verify failed.");
+op(verify, C, [_X | M]) -> {C, M};
 op('num=verify', C, [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
-        true ->
-            {C, M};
-        false ->
-            io:format("equal_verify failed.\ntop: ~p, second: "
-	        "~p~n",
-	        [Y, X])
+      true -> {C, M};
+      false ->
+	  io:format("equal_verify failed.\ntop: ~p, second: "
+		    "~p~n",
+		    [Y, X])
     end;
 op('=verify', C, [X, X | M]) -> {C, M};
 op('=verify', _C, [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
 	      "~p~n",
 	      [Y, X]);
-op('checksignverify', C, M) ->
+op(checksignverify, C, M) ->
     % TODO
     {C, M};
-op('checkmultisignverify', C, M) ->
+op(checkmultisignverify, C, M) ->
     % TODO
     {C, M};
 op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
@@ -105,12 +106,26 @@ op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
 op(rand_bytes, C, [X | M]) ->
     {C, [crypto:strong_rand_bytes(X) | M]};
 op(call, C, [{quote, Q} | M]) ->
-    {Q ++ C, M};
-op({inline, P}, C, M) ->
-    {P ++ C, M};
-op({quote, _P} = Q, C, M) ->
-    C1 = expander:expand(C, [Q | M]),
-    {C1, []}.
+    {C, lists:reverse(Q) ++ M};
+op({quote, _X} = Q, C, M) -> {C, [Q | M]};
+op(dip, C, M) -> pop(dip, C, M).
+
+preworks(C) -> preworks(C, [], []).
+
+preworks([OP | C], M, A) ->
+    case pop(OP, C, M) of
+      {C1, M1} -> preworks(C1, M1, A);
+      missing -> preworks(C, [OP | M], A)
+    end;
+preworks([], M, _A) -> lists:reverse(M).
+
+pop(call, C, [{quote, Q} | M]) -> {Q ++ C, M};
+pop(dip, C, [{quote, Q} | M]) ->
+    % io:format("M: ~p~n", [M]),
+    {M1, _A1} = eval([tas] ++ Q ++ [fas], M, []),
+    % io:format("M1: ~p~n", [M1]),
+    {C, M1};
+pop(_OP, _C, _M) -> missing.
 
 bool(true) -> 1;
 bool(false) -> 0.
