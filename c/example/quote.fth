@@ -4,4 +4,7 @@
 : bi
     [ keep ] dip call ; inline
 
-: main 4 3 1 [ + ] [ + ] bi ;
+: tri
+    [ [ keep ] dip keep ] dip call ; inline
+
+: main 1 [ 1 + ] [ 2 + ] [ 3 + ] tri ;

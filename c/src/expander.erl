@@ -24,7 +24,7 @@ check_inlines([], R) ->
 op({inline, I}, C, M) ->
     {I ++ C, M};
 op({quote, Q}, C, M) ->
-    {C, [{quote, mix_inlines(Q, [])} | M]};
+    {C, [{quote, expand(Q)} | M]};
 op(X, C, M) ->
     {C, [X | M]}.
 
