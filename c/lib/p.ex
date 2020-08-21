@@ -60,7 +60,6 @@ defmodule P do
       |> ascii_string([not: ?)], min: 0)
       |> ignore(string(")"))
       |> tag(:comment)
-      |> repeat(ignore(choice([string("\n"), string(" ")])))
     )
 
   binary =
@@ -82,7 +81,15 @@ defmodule P do
     |> string(":")
     |> ignore(string(" "))
     |> times(
-      choice([hex_number, pos_integer, neg_integer, binary_list, identifier, binary])
+      choice([
+        hex_number,
+        pos_integer,
+        neg_integer,
+        binary_list,
+        identifier,
+        binary,
+        ignore(comment)
+      ])
       |> times(ignore(choice([string("\n"), string(" ")])), min: 1),
       min: 1
     )
@@ -92,6 +99,7 @@ defmodule P do
     |> optional(ignore(comment))
     |> repeat(ignore(choice([string("\n"), string(" ")])))
     |> optional(ignore(comment))
+    |> optional(ignore(string("\n")))
     |> lookahead(ignore(choice([eos(), string(":")])))
     |> post_traverse(:wrap_it)
 

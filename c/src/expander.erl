@@ -21,8 +21,8 @@ check_inlines([H | C], R) ->
 check_inlines([], R) ->
     lists:reverse(R).
 
-op({inline, I}, C, M) ->
-    {I ++ C, M};
+op({inline, Q}, C, M) ->
+    {C, [{inline, expand(Q)} | M]};
 op({quote, Q}, C, M) ->
     {C, [{quote, expand(Q)} | M]};
 op(X, C, M) ->

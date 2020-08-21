@@ -66,12 +66,15 @@ defmodule MiniForth do
     end)
   end
 
+  defp concat(x, y), do: x <> "\n" <> y
+
   defp try_to_run_sv_code(arg) do
     core = File.read!("core/core.fth")
-    code = File.read!(arg)
+    core_ext = File.read!("core/core_ext.fth")
+    code = concat(core_ext, File.read!(arg))
 
     raw =
-      (core <> "\n" <> code)
+      concat(core, code)
       |> C.parse()
       |> C.replace()
       |> C.compile()
@@ -88,7 +91,7 @@ defmodule MiniForth do
 
     if main do
       IO.puts(
-        "Raw script: \n" <>
+        "[RAW SCRIPT]\n" <>
           inspect(C.to_asm_string(raw_without_core.main), limit: :infinity) <> "\n"
       )
 
@@ -110,7 +113,7 @@ defmodule MiniForth do
   end
 
   defp print_stacks({m, a}) do
-    IO.puts("")
+    IO.puts("[EVAL RESULT]")
     IO.puts("MainStack: " <> inspect(Enum.reverse(m)))
     IO.puts("AltStack:  " <> inspect(Enum.reverse(a)))
     IO.puts("")

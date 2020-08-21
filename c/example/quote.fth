@@ -1,10 +1,6 @@
-: keep
-    over [ call ] dip ; inline
+\ : f
+\     [ 1 + ] [ 2 + ] bi ;
 
-: bi
-    [ keep ] dip call ; inline
+\ : main 1 f ;
 
-: tri
-    [ [ keep ] dip keep ] dip call ; inline
-
-: main 1 [ 1 + ] [ 2 + ] [ 3 + ] tri ;
+: main 1 2 3 4 [ + ] 2dip ;

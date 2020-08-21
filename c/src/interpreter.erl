@@ -108,7 +108,8 @@ op(rand_bytes, C, [X | M]) ->
 op(call, C, [{quote, Q} | M]) ->
     {C, lists:reverse(Q) ++ M};
 op({quote, _X} = Q, C, M) -> {C, [Q | M]};
-op(dip, C, M) -> pop(dip, C, M).
+op(dip, C, M) -> pop(dip, C, M);
+op({inline, _X} = I, C, M) -> pop(I, C, M).
 
 preworks(C) -> preworks(C, [], []).
 
@@ -117,14 +118,28 @@ preworks([OP | C], M, A) ->
       {C1, M1} -> preworks(C1, M1, A);
       missing -> preworks(C, [OP | M], A)
     end;
-preworks([], M, _A) -> lists:reverse(M).
+preworks([], M, _A) ->
+    M1 = lists:reverse(M),
+    case lists:any(fun (X) when X == dip orelse X == call ->
+			   true;
+		       ({inline, _}) -> true;
+		       (_) -> false
+		   end,
+		   M1)
+	of
+      true -> preworks(M1);
+      false -> M1
+    end.
 
 pop(call, C, [{quote, Q} | M]) -> {Q ++ C, M};
-pop(dip, C, [{quote, Q} | M]) ->
-    % io:format("M: ~p~n", [M]),
-    {M1, _A1} = eval([tas] ++ Q ++ [fas], M, []),
-    % io:format("M1: ~p~n", [M1]),
+pop(dip, C, [{quote, Q}, H | M]) ->
+    io:format("M: ~p~n", [M]),
+    M1 = [H | lists:reverse(Q) ++ M],
+    io:format("M1: ~p~n", [M1]),
     {C, M1};
+pop({inline, Code}, C, M) ->
+    {M1, _A1} = eval(Code, M, []), {C, M1};
+pop(call, C, M) -> io:format("ERROR: ~p~n", [{C, M}]);
 pop(_OP, _C, _M) -> missing.
 
 bool(true) -> 1;
