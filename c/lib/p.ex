@@ -21,7 +21,9 @@ defmodule P do
 
   defp to_type({:binary, bin}), do: bin
 
-  defp to_type({:binary_list, list}), do: :erlang.list_to_binary(list)
+  defp to_type({:elixir_binary, bin}) do
+    IO.iodata_to_binary(bin) |> Code.eval_string() |> elem(0)
+  end
 
   defp to_type({:hex_number, [hex]}) do
     {int, ""} = Integer.parse(hex, 16)
@@ -65,15 +67,12 @@ defmodule P do
   binary =
     ignore(string("\"")) |> utf8_string([not: 34], min: 0) |> ignore(string("\"")) |> tag(:binary)
 
+  # FIXME
   binary_list =
-    ignore(string("<<"))
-    |> repeat(
-      integer(min: 1)
-      |> optional(ignore(ascii_char([?,])))
-      |> optional(ignore(string("\s")))
-    )
-    |> ignore(string(">>"))
-    |> tag(:binary_list)
+    string("<<")
+    |> ascii_string([not: ?>], min: 0)
+    |> string(">>")
+    |> tag(:elixir_binary)
 
   definition =
     ignore(repeat(choice([string("\n"), string(" ")])))

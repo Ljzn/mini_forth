@@ -12,4 +12,4 @@
 : concat_n_bytes ( byte... max_len -- bytes )
     0 do cat loop ;
 
-: main "abcdefg" 32 reverse_n_bytes ;
+: main <<"abcdefg">> 32 reverse_n_bytes ;
