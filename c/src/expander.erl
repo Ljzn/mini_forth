@@ -1,5 +1,9 @@
 -module(expander).
 
+%% Macro Expander
+%%
+%% This module is deprecated.
+
 -export([expand/1, step/1]).
 
 expand(C) ->
@@ -61,5 +65,7 @@ eval(over, [X, Y | R]) ->
     [Y, X, Y | R];
 eval(swap, [X, Y | R]) ->
     [Y, X | R];
+eval(dup, [X | R]) ->
+    [X, X | R];
 eval(Op, R) ->
     [Op | R].

@@ -91,6 +91,7 @@ defmodule MiniForth do
 
     if main do
       IO.puts("")
+
       IO.puts(
         "[RAW SCRIPT]\n" <>
           inspect(C.to_asm_string(raw_without_core.main), limit: :infinity) <> "\n"

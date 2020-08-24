@@ -1,7 +1,6 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, num2bin/1,
-	 preworks/1, simple_eval/1, test/0]).
+-export([bin2num/1, eval/1, eval/3, num2bin/1, simple_eval/1, test/0]).
 
 eval(S) -> eval(S, [], []).
 
@@ -32,6 +31,8 @@ eval(['not' | C], [X | M], A) ->
     eval(C, [logic_not(X) | M], A);
 eval(['xor' | C], [Y, X | M], A) ->
     eval(C, [X bxor Y | M], A);
+eval([size | C], [0 | M], A) ->
+    eval(C, [0, 0 | M], A);
 eval([size | C], [X | M], A) ->
     eval(C, [byte_size(X), X | M], A);
 eval([X | C], M, A) when is_integer(X) ->
@@ -51,6 +52,12 @@ eval(['if' | C], [H | M], A) ->
 eval([nop | C], M, A) -> eval(C, M, A);
 eval([split | C], [P, B | M], A) ->
     eval(C, split(B, P) ++ M, A);
+eval([cat | C], [0, 0 | M], A) ->
+    eval(C, [<<>> | M], A);
+eval([cat | C], [Y, 0 | M], A) ->
+    eval(C, [Y | M], A);
+eval([cat | C], [0, X | M], A) ->
+    eval(C, [X | M], A);
 eval([cat | C], [Y, X | M], A) ->
     eval(C, [<<X/binary, Y/binary>> | M], A);
 eval([swap | C], [X, Y | M], A) ->
@@ -67,6 +74,8 @@ eval([], M, A) -> {M, A}.
 
 op(sha256, C, [H | M]) ->
     {C, [crypto:hash(sha256, H) | M]};
+op('1-', C, [X | M]) ->
+    {C, [X-1 | M]};
 op(hash256, C, M) -> {[sha256, sha256 | C], M};
 op(not0, C, M) -> {['not', 'not' | C], M};
 op(negate, C, [H | M]) -> {C, [-H | M]};
@@ -103,47 +112,15 @@ op(checkmultisignverify, C, M) ->
 op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
 op(cr, C, M) -> io:format("~n", []), {C, M};
 op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
+op(privkey_to_compressed_pubkey, C, [X | M]) ->
+    {C, ['Elixir.K':privkey_to_compressed_pubkey(X) | M] };
+op(ecdsa_verify, C, [ Hash, Sig, Pk | M]) ->
+    {C, ['Elixir.K':ecdsa_verify(Pk, Sig, Hash) | M]};
 op(rand_bytes, C, [X | M]) ->
     {C, [crypto:strong_rand_bytes(X) | M]};
-op({quote, _X} = Q, C, M) -> {C, [Q | M]};
-op(call, C, M) -> 
-    io:format("CALL: ~p~n", [{C, M}]),
-    pop(call, C, M);
-op(dip, C, M) -> 
-    io:format("DIP: ~p~n", [{C, M}]),
-    pop(dip, C, M);
-op({inline, _X} = I, C, M) -> pop(I, C, M).
-
-preworks(C) -> preworks(C, [], []).
-
-preworks([OP | C], M, A) ->
-    case pop(OP, C, M) of
-      {C1, M1} -> preworks(C1, M1, A);
-      missing -> preworks(C, [OP | M], A)
-    end;
-preworks([], M, _A) ->
-    M1 = lists:reverse(M),
-    case lists:any(fun (X) when X == dip orelse X == call ->
-			   true;
-		       ({inline, _}) -> true;
-		       (_) -> false
-		   end,
-		   M1)
-	of
-      true -> preworks(M1);
-      false -> M1
-    end.
-
-pop(call, C, [{quote, Q} | M]) -> {Q ++ C, M};
-pop(dip, C, [Q, H | M]) ->
-    {[Q, call, H | C], M};
-pop({inline, Code}, C, M) ->
-    io:format("Code ~p~n", [Code]),
-    {M1, _A1} = eval(Code, M, []),
-    io:format("~p~n", [M1]),
-    {C, M1};
-pop(call, C, M) -> io:format("ERROR: ~p~n", [{C, M}]);
-pop(_OP, _C, _M) -> missing.
+op(dersig_encode, C, [S, R | M]) ->
+    {C, ['Elixir.DERSig':encode(R, S) | M]};
+op({quote, _X} = Q, C, M) -> {C, [Q | M]}.
 
 bool(true) -> 1;
 bool(false) -> 0.

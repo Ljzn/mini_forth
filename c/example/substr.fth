@@ -1,13 +1,15 @@
-( substring )
+\ sub string
 
-: left split drop ;
+: left ( str n -- left_str )
+    split drop ;
 
-: right split nip ;
+: right ( str n -- right_str )
+    split nip ;
 
-: substr
+: substr ( str start len -- substr )
     rot rot right
     swap left ;
 
-: main "I am a fish" 2 2 substr ;
+: main "I am a fish" 2 4 substr ;
 
-: test main "am" =verify ;
+: test main "am a" =verify ;

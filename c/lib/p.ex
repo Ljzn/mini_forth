@@ -40,11 +40,11 @@ defmodule P do
 
   identifier =
     ascii_string(
-      [?a..?z, ?A..?Z, ?0..?9, ?=, ?_, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<, ?&, ?|, ?., ?[, ?]],
+      [?a..?z, ?A..?Z, ?0..?9, ?=, ?_, ?!, ?+, ?-, ?*, ?/, ?%, ?>, ?<, ?&, ?|, ?., ?[, ?], ?@],
       min: 1
     )
 
-  pos_integer = integer(min: 1) |> lookahead(string(" "))
+  pos_integer = integer(min: 1) |> lookahead(choice([string(" "), string("\n")]))
 
   neg_integer =
     ignore(string("-")) |> integer(min: 1) |> lookahead(string(" ")) |> tag(:neg_integer)

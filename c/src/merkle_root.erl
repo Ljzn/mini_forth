@@ -1,5 +1,10 @@
 -module(merkle_root).
 
+%% Calcuate the Merkle Root of a list of TXIDs.
+%%
+%% This module is not be used now, but maybe have some
+%% usecase in future.
+
 -export([get_merkle_root/1, test/0]).
 
 get_merkle_root(L) -> pairs_merkle(L).

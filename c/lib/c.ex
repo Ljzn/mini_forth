@@ -31,7 +31,10 @@ defmodule C do
     str =
       str
       |> String.split("\n")
-      |> Enum.reject(fn x -> String.starts_with?(x, "\\") end)
+      |> Enum.reject(fn x ->
+        x = String.trim_leading(x)
+        String.starts_with?(x, "\\")
+      end)
       |> Enum.join("\n")
 
     {:ok, result, _, _, _, _} = P.simple_forth(str)
@@ -99,6 +102,7 @@ defmodule C do
   defp do_to_asm_string(:/), do: "OP_DIV"
   defp do_to_asm_string(:%), do: "OP_MOD"
   defp do_to_asm_string(:=), do: "OP_EQUAL"
+  defp do_to_asm_string(:"1-"), do: "OP_1SUB"
   defp do_to_asm_string(:fas), do: "OP_FROMALTSTACK"
   defp do_to_asm_string(:tas), do: "OP_TOALTSTACK"
   defp do_to_asm_string(:"=verify"), do: "OP_EQUALVERIFY"
@@ -117,14 +121,16 @@ defmodule C do
 
   def compile(map) do
     for {k, v} <- map, into: %{} do
-      {k,
-       v
-       #  |> IO.inspect(label: "before literal")
-       |> :compiler.compile_literal()
-       #  |> IO.inspect(label: "after literal")
-       |> :compiler.unroll()
-       #  |> IO.inspect(label: "after unroll")
-       |> expand_main(k)}
+      {
+        k,
+        v
+        #  |> IO.inspect(label: "before literal")
+        |> :compiler.compile_literal()
+        #  |> IO.inspect(label: "after literal")
+        |> expand_main(k)
+        |> :compiler.unroll()
+        #  |> IO.inspect(label: "after unroll")
+      }
     end
   end
 
@@ -134,8 +140,6 @@ defmodule C do
     |> :expander.expand()
     |> IO.inspect(label: "after expand")
     |> :expander.step()
-    # |> :interpreter.preworks()
-    # |> IO.inspect(label: "after prework")
   end
 
   defp expand_main(v, _), do: v
