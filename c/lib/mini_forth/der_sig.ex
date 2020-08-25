@@ -1,7 +1,7 @@
 ## Origin Code: https://github.com/comboy/bitcoin-elixir
 ## LICENSE: https://github.com/comboy/bitcoin-elixir/blob/develop/LICENSE
 
-defmodule DERSig do
+defmodule MiniForth.DERSig do
   @moduledoc """
   DER Signature.
 
@@ -31,6 +31,7 @@ defmodule DERSig do
   """
 
   use Bitwise
+  alias MiniForth.Secp256k1
 
   defstruct [:length, :r_type, :r, :s_type, :s, :type]
 

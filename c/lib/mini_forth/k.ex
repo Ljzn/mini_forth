@@ -1,4 +1,4 @@
-defmodule K do
+defmodule MiniForth.K do
   @moduledoc """
   About keys.
   """

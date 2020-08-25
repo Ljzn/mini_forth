@@ -1,4 +1,4 @@
-defmodule U do
+defmodule MiniForth.U do
   @moduledoc """
   Utils.
   """

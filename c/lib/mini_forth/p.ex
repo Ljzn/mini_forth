@@ -1,5 +1,6 @@
-defmodule P do
+defmodule MiniForth.P do
   import NimbleParsec
+  alias MiniForth.{U}
 
   defp wrap_it(_rest, args, context, _line, _offset) do
     [k | v] =

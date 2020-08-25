@@ -7,6 +7,7 @@ defmodule MiniForth do
   options:
     --debug     Print debug info.
   """
+  alias MiniForth.{C}
 
   def main([]) do
     IO.puts(@moduledoc)

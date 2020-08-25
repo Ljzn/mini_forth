@@ -1,7 +1,8 @@
-defmodule C do
+defmodule MiniForth.C do
   @moduledoc """
   C stands for compiler.
   """
+  alias MiniForth.{P, U}
 
   @doc """
   Parse the string code into a map of definations.

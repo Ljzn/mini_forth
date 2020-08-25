@@ -1,7 +1,7 @@
 ## Origin Code: https://github.com/comboy/bitcoin-elixir
 ## LICENSE: https://github.com/comboy/bitcoin-elixir/blob/develop/LICENSE
 
-defmodule Secp256k1 do
+defmodule MiniForth.Secp256k1 do
   @moduledoc """
   ECDSA Secp256k1 curve operations.
 
@@ -18,7 +18,7 @@ defmodule Secp256k1 do
   in the NIF or libsecp256k1 will bring the whole erlang VM down (not just the process)
   """
 
-  alias DERSig
+  alias MiniForth.DERSig
 
   require Logger
 
