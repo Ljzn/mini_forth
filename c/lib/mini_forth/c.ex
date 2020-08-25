@@ -93,6 +93,12 @@ defmodule MiniForth.C do
   defp do_to_asm_string(:"1-"), do: "OP_1SUB"
   defp do_to_asm_string(:fas), do: "OP_FROMALTSTACK"
   defp do_to_asm_string(:tas), do: "OP_TOALTSTACK"
+  defp do_to_asm_string(:and), do: "OP_BOOLAND"
+  defp do_to_asm_string(:or), do: "OP_BOOLOR"
+  defp do_to_asm_string(:&), do: "OP_AND"
+  defp do_to_asm_string(:|), do: "OP_OR"
+  defp do_to_asm_string(:^), do: "OP_XOR"
+  defp do_to_asm_string(:"~"), do: "OP_INVERT"
   defp do_to_asm_string(:"=verify"), do: "OP_EQUALVERIFY"
   defp do_to_asm_string(:"num=verify"), do: "OP_NUMEQUALVERIFY"
 

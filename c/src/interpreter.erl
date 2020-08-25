@@ -1,7 +1,7 @@
 -module(interpreter).
 
 -export([bin2num/1, eval/1, eval/3, num2bin/1,
-	 simple_eval/1, test/0]).
+	 simple_eval/1]).
 
 eval(S) -> eval(S, [], []).
 
@@ -22,8 +22,10 @@ op('<=', [Y, X | M]) -> [bool(X =< Y) | M];
 op('&', [Y, X | M]) -> [X band Y | M];
 op('|', [Y, X | M]) -> [X bor Y | M];
 op('~', [X | M]) -> [bnot X | M];
+op('and', [Y, X | M]) -> [bool(bool(X) + bool(Y) == 2) | M];
+op('or', [Y, X | M]) -> [bool(bool(X) + bool(Y) > 0 ) | M];
 op('not', [X | M]) -> [logic_not(X) | M];
-op('xor', [Y, X | M]) -> [X bxor Y | M];
+op('^', [Y, X | M]) -> [X bxor Y | M];
 op(size, [0 | M]) -> [0, 0 | M];
 op(size, [X | M]) -> [byte_size(X), X | M];
 op(X, M) when is_integer(X) -> [X | M];
@@ -60,6 +62,11 @@ op(verify, [<<>> | _M]) -> io:format("verify failed.");
 op(verify, [_X | M]) -> M;
 op('num=verify', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
+      true -> [1 | M];
+      false -> [0 | M]
+    end;
+op('num=verify', [Y, X | M]) ->
+    case bin2num(Y) == bin2num(X) of
       true -> M;
       false ->
 	  io:format("equal_verify failed.\ntop: ~p, second: "
@@ -90,8 +97,9 @@ op(dersig_encode, [S, R | M]) ->
     ['Elixir.DERSig':encode(R, S) | M];
 op({quote, _X} = Q, M) -> [Q | M].
 
-bool(true) -> 1;
-bool(false) -> 0.
+bool(0) -> 0;
+bool(false) -> 0;
+bool(_) -> 1.
 
 pick(M, N) -> do_pick(M, N, []).
 
@@ -166,41 +174,4 @@ flip_endian(B) ->
     B1 = binary_to_list(B),
     list_to_binary(lists:reverse(B1)).
 
-%% TESTING
-
 simple_eval(C) -> hd(element(1, eval(C))).
-
-test() -> test1(), test2(), test3(), test4(), test5().
-
-test1() ->
-    List = [{255, <<255, 0>>}, {1, <<1>>}, {127, <<127>>},
-	    {128, <<128, 0>>}, {-1, <<129>>}, {-127, <<255>>},
-	    {-255, <<255, 128>>}],
-    Match = fun (N, B) -> N = bin2num(B), B = num2bin(N)
-	    end,
-    [Match(N, B) || {N, B} <- List].
-
-test2() ->
-    0 = bin2num(<<0>>),
-    1 = bin2num(<<1, 0, 0, 0, 0, 0, 0>>),
-    -1 = bin2num(<<1, 0, 0, 0, 0, 0, 128>>),
-    0 = bin2num(<<128>>),
-    0 = bin2num(<<0, 0, 0, 0, 0, 0, 128>>),
-    1 = bin2num(<<1, 0>>),
-    -127 = bin2num(<<255>>),
-    -127 = bin2num(<<127, 128>>).
-
-test3() ->
-    {[<<"am">>], []} = eval([<<"I am a fish">>, 2, 2, rot,
-			     rot, split, nip, swap, split, drop]).
-
-test4() ->
-    List = [{27, 7, 6}, {27, -7, 6}, {-27, 7, -6},
-	    {-27, -7, -6}],
-    Match = fun ({A, B, R}) -> {[R], []} = eval([A, B, '%'])
-	    end,
-    [Match(P) || P <- List].
-
-test5() ->
-    <<2, 0, 0, 0>> = simple_eval([2, 4, num2bin]),
-    <<5, 0, 0, 128>> = simple_eval([-5, 4, num2bin]).
