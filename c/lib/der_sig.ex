@@ -111,7 +111,7 @@ defmodule DERSig do
   @spec low_s?(t | binary) :: boolean
   def low_s?(sig)
   def low_s?(sig) when is_binary(sig), do: sig |> parse |> low_s?
-  def low_s?(der), do: Binary.to_integer(der.s) <= @low_s_max
+  def low_s?(der), do: :binary.decode_unsigned(der.s) <= @low_s_max
 
   @doc """
   Check if the signature is a strict DER signature (BIP66)
@@ -155,7 +155,7 @@ defmodule DERSig do
         false
 
       # R is positive
-      (Binary.at(sig, 4) &&& 0x80) == 0x80 ->
+      (:binary.at(sig, 4) &&& 0x80) == 0x80 ->
         false
 
       # No unecessary null bytes at the start of R
@@ -171,7 +171,7 @@ defmodule DERSig do
         false
 
       # S is not negative
-      (Binary.at(der.s, 0) &&& 0x80) == 0x80 ->
+      (:binary.at(der.s, 0) &&& 0x80) == 0x80 ->
         false
 
       # No unecessary null bytes at the start of S
@@ -214,7 +214,7 @@ defmodule DERSig do
   defp trim(bin), do: bin
 
   # Ensure that the low S value is used
-  defp low_s(s), do: s |> Binary.to_integer() |> low_s_num |> Binary.from_integer()
+  defp low_s(s), do: s |> :binary.decode_unsigned() |> low_s_num |> :binary.encode_unsigned()
   defp low_s_num(s) when s > @low_s_max, do: Secp256k1.params()[:n] - s
   defp low_s_num(s), do: s
 

@@ -44,8 +44,7 @@ collect_inline([H | C], R) ->
     collect_inline(C, [H | R]). 
 
 step(C) ->
-    'Elixir.U':debug(C, [{label, <<"STEP">>}]),
-    % io:format("STEP: ~p~n", [C]),
+    'Elixir.U':debug(C, [{label, <<"Macro expanding">>}]),
     s(C, []).
 
 s([{inline, Code} | T], R) ->

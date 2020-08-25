@@ -4,73 +4,81 @@
 
 eval(S) -> eval(S, [], []).
 
+%% C: codes, M: main_stack, A: alt_stack
+
 eval([tas | C], [X | M], A) -> eval(C, M, [X | A]);
 eval([fas | C], M, [X | A]) -> eval(C, [X | M], A);
-eval(['+' | C], [Y, X | M], A) ->
-    eval(C, [X + Y | M], A);
-eval(['-' | C], [Y, X | M], A) ->
-    eval(C, [X - Y | M], A);
-eval(['*' | C], [Y, X | M], A) ->
-    eval(C, [X * Y | M], A);
-eval(['/' | C], [Y, X | M], A) ->
-    eval(C, [X div Y | M], A);
-eval(['%' | C], [Y, X | M], A) ->
-    eval(C, [X rem Y | M], A);
-eval(['<' | C], [Y, X | M], A) ->
-    eval(C, [bool(X < Y) | M], A);
-eval(['>=' | C], [Y, X | M], A) ->
-    eval(C, [bool(X >= Y) | M], A);
-eval(['<=' | C], [Y, X | M], A) ->
-    eval(C, [bool(X =< Y) | M], A);
-eval(['&' | C], [Y, X | M], A) ->
-    eval(C, [X band Y | M], A);
-eval(['|' | C], [Y, X | M], A) ->
-    eval(C, [X bor Y | M], A);
-eval(['~' | C], [X | M], A) -> eval(C, [bnot X | M], A);
-eval(['not' | C], [X | M], A) ->
-    eval(C, [logic_not(X) | M], A);
-eval(['xor' | C], [Y, X | M], A) ->
-    eval(C, [X bxor Y | M], A);
-eval([size | C], [0 | M], A) ->
-    eval(C, [0, 0 | M], A);
-eval([size | C], [X | M], A) ->
-    eval(C, [byte_size(X), X | M], A);
-eval([X | C], M, A) when is_integer(X) ->
-    eval(C, [X | M], A);
-% eval([X | C], M, A)
+eval([], M, A) -> {M, A};
+eval(C, M, A) ->
+    {C1, M1} = eval(C, M),
+    eval(C1, M1, A).
+
+eval(['+' | C], [Y, X | M]) ->
+    eval(C, [X + Y | M]);
+eval(['-' | C], [Y, X | M]) ->
+    eval(C, [X - Y | M]);
+eval(['*' | C], [Y, X | M]) ->
+    eval(C, [X * Y | M]);
+eval(['/' | C], [Y, X | M]) ->
+    eval(C, [X div Y | M]);
+eval(['%' | C], [Y, X | M]) ->
+    eval(C, [X rem Y | M]);
+eval(['<' | C], [Y, X | M]) ->
+    eval(C, [bool(X < Y) | M]);
+eval(['>=' | C], [Y, X | M]) ->
+    eval(C, [bool(X >= Y) | M]);
+eval(['<=' | C], [Y, X | M]) ->
+    eval(C, [bool(X =< Y) | M]);
+eval(['&' | C], [Y, X | M]) ->
+    eval(C, [X band Y | M]);
+eval(['|' | C], [Y, X | M]) ->
+    eval(C, [X bor Y | M]);
+eval(['~' | C], [X | M]) -> eval(C, [bnot X | M]);
+eval(['not' | C], [X | M]) ->
+    eval(C, [logic_not(X) | M]);
+eval(['xor' | C], [Y, X | M]) ->
+    eval(C, [X bxor Y | M]);
+eval([size | C], [0 | M]) ->
+    eval(C, [0, 0 | M]);
+eval([size | C], [X | M]) ->
+    eval(C, [byte_size(X), X | M]);
+eval([X | C], M) when is_integer(X) ->
+    eval(C, [X | M]);
+% eval([X | C], M)
 %     when is_integer(X) ->
-%     eval(C, [binary:encode_unsigned(X) | M], A);
-eval([X | C], M, A) when is_binary(X) ->
-    eval(C, [X | M], A);
-eval([pick | C], [N | M], A) ->
-    M1 = pick(M, N), eval(C, M1, A);
-eval([over | C], [X, Y | M], A) ->
-    eval(C, [Y, X, Y | M], A);
-eval(['if' | C], [H | M], A) ->
+%     eval(C, [binary:encode_unsigned(X) | M]);
+eval([X | C], M) when is_binary(X) ->
+    eval(C, [X | M]);
+eval([pick | C], [N | M]) ->
+    M1 = pick(M, N), eval(C, M1);
+eval([over | C], [X, Y | M]) ->
+    eval(C, [Y, X, Y | M]);
+eval(['if' | C], [H | M]) ->
     {T, F, R} = branches(C),
-    eval(choose(H, T, F) ++ R, M, A);
-eval([nop | C], M, A) -> eval(C, M, A);
-eval([split | C], [P, B | M], A) ->
-    eval(C, split(B, P) ++ M, A);
-eval([cat | C], [0, 0 | M], A) ->
-    eval(C, [<<>> | M], A);
-eval([cat | C], [Y, 0 | M], A) ->
-    eval(C, [Y | M], A);
-eval([cat | C], [0, X | M], A) ->
-    eval(C, [X | M], A);
-eval([cat | C], [Y, X | M], A) ->
-    eval(C, [<<X/binary, Y/binary>> | M], A);
-eval([swap | C], [X, Y | M], A) ->
-    eval(C, [Y, X | M], A);
-eval([drop | C], [_X | M], A) -> eval(C, M, A);
-eval([tuck | C], [X, Y | M], A) ->
-    eval(C, [X, Y, X | M], A);
-eval([OP | C], M, A) ->
+    eval(choose(H, T, F) ++ R, M);
+eval([nop | C], M) -> eval(C, M);
+eval([split | C], [P, B | M]) ->
+    eval(C, split(B, P) ++ M);
+eval([cat | C], [0, 0 | M]) ->
+    eval(C, [<<>> | M]);
+eval([cat | C], [Y, 0 | M]) ->
+    eval(C, [Y | M]);
+eval([cat | C], [0, X | M]) ->
+    eval(C, [X | M]);
+eval([cat | C], [Y, X | M]) ->
+    eval(C, [<<X/binary, Y/binary>> | M]);
+eval([swap | C], [X, Y | M]) ->
+    eval(C, [Y, X | M]);
+eval([drop | C], [_X | M]) -> eval(C, M);
+eval([tuck | C], [X, Y | M]) ->
+    eval(C, [X, Y, X | M]);
+eval([OP | C], M) ->
     case op(OP, C, M) of
-      {C1, M1} -> eval(C1, M1, A);
+      {C1, M1} -> eval(C1, M1);
       ok -> ok
     end;
-eval([], M, A) -> {M, A}.
+eval([], M) -> {[], M}.
+
 
 op(sha256, C, [H | M]) ->
     {C, [crypto:hash(sha256, H) | M]};

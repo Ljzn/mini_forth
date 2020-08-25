@@ -1,6 +1,6 @@
 defmodule C do
   @moduledoc """
-  Documentation for `C`.
+  C stands for compiler.
   """
 
   @doc """
@@ -31,13 +31,12 @@ defmodule C do
     for {k, v} <- result, into: %{} do
       {k, v}
     end
-
-    # |> IO.inspect(label: "parsed", limit: :infinity)
+    |> U.debug(label: "parsed", limit: :infinity)
   end
 
   @doc """
   Replace the user defined keywrod.
-  The max round is 100.
+  The max round is 1000.
 
   ## Examples
 
@@ -47,10 +46,10 @@ defmodule C do
   """
   def replace(map) do
     do_replace(map, 0)
-    # |> IO.inspect(label: "replaced", limit: :infinity)
+    |> U.debug(label: "replaced", limit: :infinity)
   end
 
-  defp do_replace(_map, 100), do: raise("reach max replace limit")
+  defp do_replace(_map, 1000), do: raise("reach max replace limit")
 
   defp do_replace(map, t) do
     map1 =
@@ -112,21 +111,21 @@ defmodule C do
       {
         k,
         v
-        #  |> IO.inspect(label: "before literal")
+        |> U.debug(label: "before literal")
         |> :compiler.compile_literal()
-        #  |> IO.inspect(label: "after literal")
+        |> U.debug(label: "after literal")
         |> expand_main(k)
         |> :compiler.unroll()
-        #  |> IO.inspect(label: "after unroll")
+        |> U.debug(label: "after unroll")
       }
     end
   end
 
   defp expand_main(v, :main) do
     v
-    # |> IO.inspect(label: "before expand")
+    |> U.debug(label: "before expand")
     |> :expander.expand()
-    # |> IO.inspect(label: "after expand")
+    |> U.debug(label: "after expand")
     |> :expander.step()
   end
 
