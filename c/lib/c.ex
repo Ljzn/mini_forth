@@ -4,19 +4,6 @@ defmodule C do
   """
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> C.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
-
-  @doc """
   Parse the string code into a map of definations.
 
   ## Examples
@@ -37,8 +24,9 @@ defmodule C do
       end)
       |> Enum.join("\n")
 
-    {:ok, result, _, _, _, _} = P.simple_forth(str)
-    # |> IO.inspect(lable: "after parse")
+    {:ok, result, _, _, _, _} =
+      P.simple_forth(str)
+      |> U.debug(lable: "after parse")
 
     for {k, v} <- result, into: %{} do
       {k, v}
@@ -136,9 +124,9 @@ defmodule C do
 
   defp expand_main(v, :main) do
     v
-    |> IO.inspect(label: "before expand")
+    # |> IO.inspect(label: "before expand")
     |> :expander.expand()
-    |> IO.inspect(label: "after expand")
+    # |> IO.inspect(label: "after expand")
     |> :expander.step()
   end
 

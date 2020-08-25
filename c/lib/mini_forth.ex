@@ -1,12 +1,11 @@
 defmodule MiniForth do
   @moduledoc """
   synopsis:
-    Prints args, possibly multiple times.
+    Compile the .fth file
   usage:
-    $ test10 {options} arg1 arg2 ...
+    $ mini_forth example/loop.fth
   options:
-    --verbose     Add more info.
-    --count=n     Print n times.
+    --debug     Print debug info.
   """
 
   def main([]) do
@@ -36,33 +35,21 @@ defmodule MiniForth do
   defp parse_args(args) do
     {opts, cmd_and_args, errors} =
       args
-      |> OptionParser.parse(strict: [verbose: :boolean, count: :integer])
+      |> OptionParser.parse(strict: [debug: :boolean])
 
     {opts, cmd_and_args, errors}
   end
 
   defp process_args(opts, args) do
-    count = Keyword.get(opts, :count, 1)
+    debug = Keyword.has_key?(opts, :debug)
 
-    # printfn =
-    #   if not Keyword.has_key?(opts, :verbose) do
-    #     fn arg -> IO.puts(arg) end
-    #   else
-    #     fn arg ->
-    #       IO.write("Message: ")
-    #       IO.puts(arg)
-    #     end
-    #   end
+    Application.put_env(:elixir, :mini_forth_debug, debug)
 
-    Stream.iterate(0, &(&1 + 1))
-    |> Stream.take(count)
-    |> Enum.each(fn _counter ->
-      Enum.with_index(args)
-      |> Enum.each(fn {arg, _idx} ->
-        # printfn.("#{idx}. #{arg}")
+    Enum.with_index(args)
+    |> Enum.each(fn {arg, _idx} ->
+      # printfn.("#{idx}. #{arg}")
 
-        try_to_run_sv_code(arg)
-      end)
+      try_to_run_sv_code(arg)
     end)
   end
 

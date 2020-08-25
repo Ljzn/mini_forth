@@ -2,7 +2,6 @@
 
 %% Macro Expander
 %%
-%% This module is deprecated.
 
 -export([expand/1, step/1]).
 
@@ -45,7 +44,8 @@ collect_inline([H | C], R) ->
     collect_inline(C, [H | R]). 
 
 step(C) ->
-    io:format("STEP: ~p~n", [C]),
+    'Elixir.U':debug(C, [{label, <<"STEP">>}]),
+    % io:format("STEP: ~p~n", [C]),
     s(C, []).
 
 s([{inline, Code} | T], R) ->
@@ -60,6 +60,11 @@ s([H|T], R) ->
     s(T, [H | R]);
 s([], R) ->
     lists:reverse(R).
+
+%% Compile-time Opcodes
+%%
+%% If we need another opcode in the inline definition,
+%% should be added here.
 
 eval(over, [X, Y | R]) ->
     [Y, X, Y | R];
