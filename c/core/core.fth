@@ -13,3 +13,5 @@
 : min 2dup < if drop else nip endif ;
 : max 2dup > if drop else nip endif ;
 : > swap < ;
+: hash256 sha256 sha256 ;
+: not0 not not ;

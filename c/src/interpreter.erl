@@ -1,6 +1,7 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, num2bin/1, simple_eval/1, test/0]).
+-export([bin2num/1, eval/1, eval/3, num2bin/1,
+	 simple_eval/1, test/0]).
 
 eval(S) -> eval(S, [], []).
 
@@ -9,126 +10,85 @@ eval(S) -> eval(S, [], []).
 eval([tas | C], [X | M], A) -> eval(C, M, [X | A]);
 eval([fas | C], M, [X | A]) -> eval(C, [X | M], A);
 eval([], M, A) -> {M, A};
-eval(C, M, A) ->
-    {C1, M1} = eval(C, M),
-    eval(C1, M1, A).
-
-eval(['+' | C], [Y, X | M]) ->
-    eval(C, [X + Y | M]);
-eval(['-' | C], [Y, X | M]) ->
-    eval(C, [X - Y | M]);
-eval(['*' | C], [Y, X | M]) ->
-    eval(C, [X * Y | M]);
-eval(['/' | C], [Y, X | M]) ->
-    eval(C, [X div Y | M]);
-eval(['%' | C], [Y, X | M]) ->
-    eval(C, [X rem Y | M]);
-eval(['<' | C], [Y, X | M]) ->
-    eval(C, [bool(X < Y) | M]);
-eval(['>=' | C], [Y, X | M]) ->
-    eval(C, [bool(X >= Y) | M]);
-eval(['<=' | C], [Y, X | M]) ->
-    eval(C, [bool(X =< Y) | M]);
-eval(['&' | C], [Y, X | M]) ->
-    eval(C, [X band Y | M]);
-eval(['|' | C], [Y, X | M]) ->
-    eval(C, [X bor Y | M]);
-eval(['~' | C], [X | M]) -> eval(C, [bnot X | M]);
-eval(['not' | C], [X | M]) ->
-    eval(C, [logic_not(X) | M]);
-eval(['xor' | C], [Y, X | M]) ->
-    eval(C, [X bxor Y | M]);
-eval([size | C], [0 | M]) ->
-    eval(C, [0, 0 | M]);
-eval([size | C], [X | M]) ->
-    eval(C, [byte_size(X), X | M]);
-eval([X | C], M) when is_integer(X) ->
-    eval(C, [X | M]);
-% eval([X | C], M)
-%     when is_integer(X) ->
-%     eval(C, [binary:encode_unsigned(X) | M]);
-eval([X | C], M) when is_binary(X) ->
-    eval(C, [X | M]);
-eval([pick | C], [N | M]) ->
-    M1 = pick(M, N), eval(C, M1);
-eval([over | C], [X, Y | M]) ->
-    eval(C, [Y, X, Y | M]);
-eval(['if' | C], [H | M]) ->
+eval(['if' | C], [H | M], A) ->
     {T, F, R} = branches(C),
-    eval(choose(H, T, F) ++ R, M);
-eval([nop | C], M) -> eval(C, M);
-eval([split | C], [P, B | M]) ->
-    eval(C, split(B, P) ++ M);
-eval([cat | C], [0, 0 | M]) ->
-    eval(C, [<<>> | M]);
-eval([cat | C], [Y, 0 | M]) ->
-    eval(C, [Y | M]);
-eval([cat | C], [0, X | M]) ->
-    eval(C, [X | M]);
-eval([cat | C], [Y, X | M]) ->
-    eval(C, [<<X/binary, Y/binary>> | M]);
-eval([swap | C], [X, Y | M]) ->
-    eval(C, [Y, X | M]);
-eval([drop | C], [_X | M]) -> eval(C, M);
-eval([tuck | C], [X, Y | M]) ->
-    eval(C, [X, Y, X | M]);
-eval([OP | C], M) ->
-    case op(OP, C, M) of
-      {C1, M1} -> eval(C1, M1);
-      ok -> ok
-    end;
-eval([], M) -> {[], M}.
+    eval(choose(H, T, F) ++ R, M, A);
+eval([H | C], M, A) -> M1 = op(H, M), eval(C, M1, A).
 
-
-op(sha256, C, [H | M]) ->
-    {C, [crypto:hash(sha256, H) | M]};
-op('1-', C, [X | M]) ->
-    {C, [X-1 | M]};
-op(hash256, C, M) -> {[sha256, sha256 | C], M};
-op(not0, C, M) -> {['not', 'not' | C], M};
-op(negate, C, [H | M]) -> {C, [-H | M]};
-op(bin2num, C, [H | M]) -> {C, [bin2num(H) | M]};
-op(num2bin, C, [Y, X | M]) -> {C, [num2bin(X, Y) | M]};
-op(dup, C, [H | M]) -> {C, [H, H | M]};
-op('=', C, [X, X | M]) -> {C, [1 | M]};
-op('=', C, [_Y, _X | M]) -> {C, [0 | M]};
-op(verify, _C, [0 | _M]) -> io:format("verify failed.");
-op(verify, _C, [false | _M]) ->
-    io:format("verify failed.");
-op(verify, _C, [<<>> | _M]) ->
-    io:format("verify failed.");
-op(verify, C, [_X | M]) -> {C, M};
-op('num=verify', C, [Y, X | M]) ->
+op('%', [Y, X | M]) -> [X rem Y | M];
+op('<', [Y, X | M]) -> [bool(X < Y) | M];
+op('>=', [Y, X | M]) -> [bool(X >= Y) | M];
+op('<=', [Y, X | M]) -> [bool(X =< Y) | M];
+op('&', [Y, X | M]) -> [X band Y | M];
+op('|', [Y, X | M]) -> [X bor Y | M];
+op('~', [X | M]) -> [bnot X | M];
+op('not', [X | M]) -> [logic_not(X) | M];
+op('xor', [Y, X | M]) -> [X bxor Y | M];
+op(size, [0 | M]) -> [0, 0 | M];
+op(size, [X | M]) -> [byte_size(X), X | M];
+op(X, M) when is_integer(X) -> [X | M];
+% op(X, M)
+%     when is_integer(X) ->
+%   [binary:encode_unsigned(X) | M];
+op(X, M) when is_binary(X) -> [X | M];
+op(pick, [N | M]) -> pick(M, N);
+op(over, [X, Y | M]) -> [Y, X, Y | M];
+op(nop, M) -> M;
+op(split, [P, B | M]) -> split(B, P) ++ M;
+op(cat, [0, 0 | M]) -> [<<>> | M];
+op(cat, [Y, 0 | M]) -> [Y | M];
+op(cat, [0, X | M]) -> [X | M];
+op(cat, [Y, X | M]) -> [<<X/binary, Y/binary>> | M];
+op(swap, [X, Y | M]) -> [Y, X | M];
+op(drop, [_X | M]) -> M;
+op(tuck, [X, Y | M]) -> [X, Y, X | M];
+op('+', [Y, X | M]) -> [X + Y | M];
+op('-', [Y, X | M]) -> [X - Y | M];
+op('*', [Y, X | M]) -> [X * Y | M];
+op('/', [Y, X | M]) -> [X div Y | M];
+op(sha256, [H | M]) -> [crypto:hash(sha256, H) | M];
+op('1-', [X | M]) -> [X - 1 | M];
+op(negate, [H | M]) -> [-H | M];
+op(bin2num, [H | M]) -> [bin2num(H) | M];
+op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
+op(dup, [H | M]) -> [H, H | M];
+op('=', [X, X | M]) -> [1 | M];
+op('=', [_Y, _X | M]) -> [0 | M];
+op(verify, [0 | _M]) -> io:format("verify failed.");
+op(verify, [false | _M]) -> io:format("verify failed.");
+op(verify, [<<>> | _M]) -> io:format("verify failed.");
+op(verify, [_X | M]) -> M;
+op('num=verify', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
-      true -> {C, M};
+      true -> M;
       false ->
 	  io:format("equal_verify failed.\ntop: ~p, second: "
 		    "~p~n",
 		    [Y, X])
     end;
-op('=verify', C, [X, X | M]) -> {C, M};
-op('=verify', _C, [Y, X | _M]) ->
+op('=verify', [X, X | M]) -> M;
+op('=verify', [Y, X | _M]) ->
     io:format("equal_verify failed.\ntop: ~p, second: "
 	      "~p~n",
 	      [Y, X]);
-op(checksignverify, C, M) ->
+op(checksignverify, M) ->
     % TODO
-    {C, M};
-op(checkmultisignverify, C, M) ->
+    M;
+op(checkmultisignverify, M) ->
     % TODO
-    {C, M};
-op('.', C, [X | M]) -> io:format("~p ", [X]), {C, M};
-op(cr, C, M) -> io:format("~n", []), {C, M};
-op(pf_inv, C, [X | M]) -> {C, [b_crypto:pf_inv(X) | M]};
-op(privkey_to_compressed_pubkey, C, [X | M]) ->
-    {C, ['Elixir.K':privkey_to_compressed_pubkey(X) | M] };
-op(ecdsa_verify, C, [ Hash, Sig, Pk | M]) ->
-    {C, ['Elixir.K':ecdsa_verify(Pk, Sig, Hash) | M]};
-op(rand_bytes, C, [X | M]) ->
-    {C, [crypto:strong_rand_bytes(X) | M]};
-op(dersig_encode, C, [S, R | M]) ->
-    {C, ['Elixir.DERSig':encode(R, S) | M]};
-op({quote, _X} = Q, C, M) -> {C, [Q | M]}.
+    M;
+op('.', [X | M]) -> io:format("~p ", [X]), M;
+op(cr, M) -> io:format("~n", []), M;
+op(pf_inv, [X | M]) -> [b_crypto:pf_inv(X) | M];
+op(privkey_to_compressed_pubkey, [X | M]) ->
+    ['Elixir.K':privkey_to_compressed_pubkey(X) | M];
+op(ecdsa_verify, [Hash, Sig, Pk | M]) ->
+    ['Elixir.K':ecdsa_verify(Pk, Sig, Hash) | M];
+op(rand_bytes, [X | M]) ->
+    [crypto:strong_rand_bytes(X) | M];
+op(dersig_encode, [S, R | M]) ->
+    ['Elixir.DERSig':encode(R, S) | M];
+op({quote, _X} = Q, M) -> [Q | M].
 
 bool(true) -> 1;
 bool(false) -> 0.
