@@ -126,3 +126,15 @@ The syntax is basically a simplified version of Forth language.
 : two [ 1 1 + ] literal ;
 ```
 
+### bi, tri
+
+These functions are borrowed from the [Factor](https://factorcode.org/) language.
+
+```fth
+\ equal to `1 1 + 1 2 *`
+: main 1 [ 1 + ] [ 2 * ] bi ;
+
+\ equal to `1 1 + 1 2 + 1 3 +`
+: main 1 [ 1 + ] [ 2 + ] [ 3 + ] tri ;
+```
+

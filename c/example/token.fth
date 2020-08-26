@@ -12,4 +12,11 @@
 : concat_n_bytes ( byte... max_len -- bytes )
     0 do cat loop ;
 
+
+\ Checking s, if s is high, change it to low s.
+
+: low_s ( n s -- s1 )
+    2dup swap 2 div > if - 
+    else nip endif ;
+
 : main <<"abcdefg">> 32 reverse_n_bytes ;
