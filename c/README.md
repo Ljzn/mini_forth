@@ -18,7 +18,7 @@ Create a new file `hello.fth` , and write:
 : main "hello" drop ;
 ```
 
-Run `./mini_forth hello.fth`. Then the terminal wiil print:
+Run `./mini_forth hello.fth`. Then the terminal will print:
 
 ```
 [RAW SCRIPT]
@@ -140,5 +140,5 @@ These functions are borrowed from the [Factor](https://factorcode.org/) language
 
 ## Support
 
-If you have any questions or errors during the use, please raise an issue or ask questions on the [B[Bitcoin Script channel](https://powping.com/c/a4d2d4ce12cfba93342a8f7eebbdd91ebe2689d68ba98fa340f457e89104b3cb) of Powping.
+If you have any questions or errors during the use, please raise an issue or ask questions on the [Bitcoin Script channel](https://powping.com/c/a4d2d4ce12cfba93342a8f7eebbdd91ebe2689d68ba98fa340f457e89104b3cb) of Powping.
 
