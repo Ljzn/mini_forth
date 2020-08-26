@@ -138,3 +138,7 @@ These functions are borrowed from the [Factor](https://factorcode.org/) language
 : main 1 [ 1 + ] [ 2 + ] [ 3 + ] tri ;
 ```
 
+## Support
+
+If you have any questions or errors during the use, please raise an issue or ask questions on the [B[Bitcoin Script channel](https://powping.com/c/a4d2d4ce12cfba93342a8f7eebbdd91ebe2689d68ba98fa340f457e89104b3cb) of Powping.
+
