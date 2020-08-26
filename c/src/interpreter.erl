@@ -1,9 +1,17 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, eval/3, num2bin/1,
+-export([bin2num/1, eval/1, num2bin/1,
 	 simple_eval/1]).
 
-eval(S) -> eval(S, [], []).
+eval(S) ->
+    S1 = replace_notif(S, []),
+    eval(S1, [], []).
+
+replace_notif([], R) -> lists:reverse(R);
+replace_notif([notif | S], R) ->
+    replace_notif(['not', 'if' | S], R);
+replace_notif([H | S], R) ->
+    replace_notif(S, [H | R]).
 
 %% C: codes, M: main_stack, A: alt_stack
 

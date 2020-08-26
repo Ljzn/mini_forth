@@ -1,1 +1,1 @@
-: main 0x80 1 lshift ;
+: main 0 notif 1 else 2 endif ;

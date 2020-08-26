@@ -1,8 +1,37 @@
 # MiniForth
 
+A mini compiler which compiles the Forth like code into bitcoin opcodes.
 
+## Build from source
 
-## Data and Opcodes
+1. have erlang and elixir installed in your machine, recommend using [asdf](https://asdf-vm.com/#/) to install 
+2. Clone this repo, cd into the directory.
+3. `cd c`
+4. `mix deps.get`
+5. `MIX_ENV=prod mix escript.build`
+
+## How to use
+
+Create a new file `hello.fth` , and write:
+
+```fth
+: main "hello" drop ;
+```
+
+Run `./mini_forth hello.fth`. Then the terminal wiil print:
+
+```
+[RAW SCRIPT]
+"68656c6c6f OP_DROP"
+
+[EVAL RESULT]
+MainStack: []
+AltStack:  []
+```
+
+There're some code examples in `/example` directory.
+
+## Data and opcodes
 
 ### Constants
 
@@ -16,22 +45,22 @@
 
 ### Arithmetic
 
-| MiniForth code | Bitcoin Sciprt ( can be read by bsv.js )                     | Description |
-| -------------- | ------------------------------------------------------------ | ----------- |
-| + - * / %      | OP_ADD OP_SUB OP_MUL OP_DIV OP_MOD                           |             |
-| 1-             | OP_1SUB                                                      |             |
-| num=           | OP_NUMEQUAL                                                  |             |
-| num=verify     | OP_NUMEQUALVERIFY                                            |             |
-| 1 2 and 0 or   | OP_1 OP_2 OP_BOOLAND OP_0 OP_BOOLOR                          |             |
-| >= <= > <      | OP_GREATERTHANOREQUAL OP_LESSTHANOREQUAL OP_GREATERTHAN OP_LESSTHAN |             |
+| MiniForth code  | Bitcoin Sciprt ( can be read by bsv.js )                     | Description |
+| --------------- | ------------------------------------------------------------ | ----------- |
+| + - * / %       | OP_ADD OP_SUB OP_MUL OP_DIV OP_MOD                           |             |
+| 1-              | OP_1SUB                                                      |             |
+| num=            | OP_NUMEQUAL                                                  |             |
+| num=verify      | OP_NUMEQUALVERIFY                                            |             |
+| and or not not0 | OP_BOOLAND OP_BOOLOR OP_NOT OP_0NOTEQUAL                     |             |
+| >= <= > <       | OP_GREATERTHANOREQUAL OP_LESSTHANOREQUAL OP_GREATERTHAN OP_LESSTHAN |             |
 
 ### Bitwise Logic
 
-| MiniForth code   | Bitcoin Sciprt ( can be read by bsv.js )          | Description |
-| ---------------- | ------------------------------------------------- | ----------- |
-| =                | OP_EQUAL                                          |             |
-| =verify          | OP_EQUALVERIFY                                    |             |
-| 1 2 & 0 \| 1 ^ ~ | OP_1 OP_2 OP_AND OP_0 OP_OR OP_1 OP_XOR OP_INVERT |             |
+| MiniForth code | Bitcoin Sciprt ( can be read by bsv.js ) | Description |
+| -------------- | ---------------------------------------- | ----------- |
+| =              | OP_EQUAL                                 |             |
+| =verify        | OP_EQUALVERIFY                           |             |
+| & \| ^ ~       | OP_AND OP_OR OP_XOR OP_INVERT            |             |
 
 ### Unimplemented
 
@@ -43,4 +72,57 @@
 ### Other Opcodes
 
 Other opcodes are expressed with downcase words, for example: `drop swap` stands for `OP_DROP OP_SWAP`.
+
+### Debug Operators
+
+| MiniForth code | Bitcoin Sciprt ( can be read by bsv.js ) | Description           |
+| -------------- | ---------------------------------------- | --------------------- |
+| .              | OP_DROP                                  | Print the top element |
+| cr             | OP_NOP                                   | Print a new line      |
+
+## Syntax
+
+The syntax is basically a simplified version of Forth language.
+
+### Define new word
+
+```fth
+: 3sub 3 - ;
+```
+
+### Comment
+
+```fth
+\ a line starts with '\' is comment
+
+\ we use ( a -- b ) to comment the arguments and returns of a word
+: left ( str n -- left_str )
+    split drop ;
+```
+
+## Compile time macros
+
+### Loop
+
+```fth
+\ the loop will be unroll at compile time
+: dup3times ( -- )
+    3 0 do dup loop ;  
+\ will be compile into `OP_DUP OP_DUP OP_DUP`
+
+\ can use the +loop to specify the step
+: countdown 
+    0 10 do cr i . -1 +loop ;
+```
+
+### literal
+
+```fth
+\ the code inside a `[ ]` is a quote
+\ when the compiler see `literal`, it will execute nearest quote
+\ and place the result at the position of `literal`
+
+\ this code equal to `: two 2 ;`
+: two [ 1 1 + ] literal ;
+```
 
