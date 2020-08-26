@@ -26,6 +26,8 @@ op('and', [Y, X | M]) -> [bool(bool(X) + bool(Y) == 2) | M];
 op('or', [Y, X | M]) -> [bool(bool(X) + bool(Y) > 0 ) | M];
 op('not', [X | M]) -> [logic_not(X) | M];
 op('^', [Y, X | M]) -> [X bxor Y | M];
+op('lshift', [Y, X | M]) -> [X bsl Y | M];
+op('rshift', [Y, X | M]) -> [X bsr Y | M];
 op(size, [0 | M]) -> [0, 0 | M];
 op(size, [X | M]) -> [byte_size(X), X | M];
 op(X, M) when is_integer(X) -> [X | M];
@@ -34,6 +36,7 @@ op(X, M) when is_integer(X) -> [X | M];
 %   [binary:encode_unsigned(X) | M];
 op(X, M) when is_binary(X) -> [X | M];
 op(pick, [N | M]) -> pick(M, N);
+op(roll, [N | M]) -> roll(M, N);
 op(over, [X, Y | M]) -> [Y, X, Y | M];
 op(nop, M) -> M;
 op(split, [P, B | M]) -> split(B, P) ++ M;
@@ -49,6 +52,7 @@ op('-', [Y, X | M]) -> [X - Y | M];
 op('*', [Y, X | M]) -> [X * Y | M];
 op('/', [Y, X | M]) -> [X div Y | M];
 op(sha256, [H | M]) -> [crypto:hash(sha256, H) | M];
+op(ripemd160, [H | M]) -> [crypto:hash(ripemd160, H) | M];
 op('1-', [X | M]) -> [X - 1 | M];
 op(negate, [H | M]) -> [-H | M];
 op(bin2num, [H | M]) -> [bin2num(H) | M];
@@ -106,6 +110,12 @@ pick(M, N) -> do_pick(M, N, []).
 do_pick([H | M], 0, A) ->
     [H | lists:reverse(A) ++ [H | M]];
 do_pick([H | M], N, A) -> do_pick(M, N - 1, [H | A]).
+
+roll(M, N) -> do_roll(M, N, []).
+
+do_roll([H | M], 0, A) ->
+    [H | lists:reverse(A) ++ M];
+do_roll([H | M], N, A) -> do_roll(M, N - 1, [H | A]).
 
 split(B, P) ->
     [binary:part(B, P, byte_size(B) - P),

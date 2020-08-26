@@ -1,1 +1,1 @@
-: main 1 1 1 within ;
+: main 0x80 1 lshift ;
