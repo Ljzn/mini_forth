@@ -15,3 +15,4 @@
 : > swap < ;
 : hash256 sha256 sha256 ;
 : not0 not not ;
+: within 2 pick > tas >= fas and ;
