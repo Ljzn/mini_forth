@@ -31,7 +31,7 @@ op('and', [Y, X | M]) ->
     [bool(bool(X) + bool(Y) == 2) | M];
 op('or', [Y, X | M]) ->
     [bool(bool(X) + bool(Y) > 0) | M];
-op('not', [X | M]) -> [logic_not(X) | M];
+op('not', [X | M]) -> [bool(bin2num(X) == 0) | M];
 op('^', [Y, X | M]) -> [X bxor Y | M];
 op(lshift, [Y, X | M]) -> [lshift(X, Y) | M];
 op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
