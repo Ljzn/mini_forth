@@ -56,22 +56,39 @@ defmodule MiniForth do
 
   defp concat(x, y), do: x <> "\n" <> y
 
+  defp prelude() do
+    {File.read!("core/core.fth"), File.read!("core/core_ext.fth")}
+  end
+
+  def run_code(code) do
+    {core, core_ext} = prelude()
+
+    code
+    |> concat(core)
+    |> concat(core_ext)
+    |> full_compile()
+    |> Map.get(:main)
+    |> :interpreter.eval()
+  end
+
+  defp full_compile(code) do
+    code
+    |> C.parse()
+    |> C.replace()
+    |> C.compile()
+  end
+
   defp try_to_run_sv_code(arg) do
-    core = File.read!("core/core.fth")
-    core_ext = File.read!("core/core_ext.fth")
+    {core, core_ext} = prelude()
     code = concat(core_ext, File.read!(arg))
 
     raw =
       concat(core, code)
-      |> C.parse()
-      |> C.replace()
-      |> C.compile()
+      |> full_compile()
 
     raw_without_core =
       code
-      |> C.parse()
-      |> C.replace()
-      |> C.compile()
+      |> full_compile()
 
     main =
       raw

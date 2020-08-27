@@ -70,9 +70,9 @@ op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
 op(dup, [H | M]) -> [H, H | M];
 op('=', [X, X | M]) -> [1 | M];
 op('=', [_Y, _X | M]) -> [0 | M];
-op(verify, [0 | _M]) -> io:format("verify failed.");
-op(verify, [false | _M]) -> io:format("verify failed.");
-op(verify, [<<>> | _M]) -> io:format("verify failed.");
+op(verify, [0 | _M]) -> error("verify failed.");
+op(verify, [false | _M]) -> error("verify failed.");
+op(verify, [<<>> | _M]) -> error("verify failed.");
 op(verify, [_X | M]) -> M;
 op('num=', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
@@ -83,15 +83,15 @@ op('num=verify', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
       true -> M;
       false ->
-	  io:format("equal_verify failed.\ntop: ~p, second: "
+	  error("equal_verify failed.\nleft: ~p, right: "
 		    "~p~n",
-		    [Y, X])
+		    [X, Y])
     end;
 op('=verify', [X, X | M]) -> M;
 op('=verify', [Y, X | _M]) ->
-    io:format("equal_verify failed.\ntop: ~p, second: "
+    error("equal_verify failed.\nleft: ~p, right: "
 	      "~p~n",
-	      [Y, X]);
+	      [X, Y]);
 op(checksignverify, M) ->
     % TODO
     M;
@@ -220,7 +220,7 @@ rshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
     <<B1:Size/bits, _:1>> = B,
     rshift(<<0:1, B1/bits>>, N - 1);
-rshift(B, N) -> rshift(num2bin(B), N).
+rshift(B, N) -> rshift(num2bin(B), bin2num(N)).
 
 lshift(<<>>, _) -> <<>>;
 lshift(_, N) when is_integer(N), N < 0 ->
@@ -230,4 +230,4 @@ lshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
     <<_:1, B1:Size/bits>> = B,
     lshift(<<B1/bits, 0:1>>, N - 1);
-lshift(B, N) -> lshift(num2bin(B), N).
+lshift(B, N) -> lshift(num2bin(B), bin2num(N)).
