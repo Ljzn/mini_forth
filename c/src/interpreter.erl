@@ -220,7 +220,7 @@ rshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
     <<B1:Size/bits, _:1>> = B,
     rshift(<<0:1, B1/bits>>, N - 1);
-rshift(B, N) -> B bsr N.
+rshift(B, N) -> rshift(num2bin(B), N).
 
 lshift(<<>>, _) -> <<>>;
 lshift(_, N) when is_integer(N), N < 0 ->
@@ -230,4 +230,4 @@ lshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
     <<_:1, B1:Size/bits>> = B,
     lshift(<<B1/bits, 0:1>>, N - 1);
-lshift(B, N) -> B bsl N.
+lshift(B, N) -> lshift(num2bin(B), N).
