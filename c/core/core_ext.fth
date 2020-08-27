@@ -1,3 +1,8 @@
+\ This file is modified from https://github.com/factor/factor/
+\
+\ Copyright (C) 2006, 2010 Slava Pestov, Daniel Ehrenberg.
+\ See http://factorcode.org/license.txt for BSD license.
+
 : keep
     over [ call ] dip ; inline
 

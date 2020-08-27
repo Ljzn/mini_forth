@@ -14,6 +14,6 @@
 : max 2dup > if drop else nip endif ;
 : > swap < ;
 : hash256 sha256 sha256 ;
-: hash160 sah256 ripemd160 ;
+: hash160 sha256 ripemd160 ;
 : not0 not not ;
 : within 2 pick > tas >= fas and ;

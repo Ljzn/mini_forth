@@ -77,8 +77,8 @@ Other opcodes are expressed with downcase words, for example: `drop swap` stands
 
 | MiniForth code | Bitcoin Sciprt ( can be read by bsv.js ) | Description           |
 | -------------- | ---------------------------------------- | --------------------- |
-| .              | OP_DROP                                  | Print the top element |
-| cr             | OP_NOP                                   | Print a new line      |
+| .              | ignore                                   | Print the top element |
+| cr             | ignore                                   | Print a new line      |
 
 ## Syntax
 
