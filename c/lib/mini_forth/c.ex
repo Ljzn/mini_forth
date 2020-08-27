@@ -104,6 +104,7 @@ defmodule MiniForth.C do
   defp do_to_asm_string(:^), do: "OP_XOR"
   defp do_to_asm_string(:"~"), do: "OP_INVERT"
   defp do_to_asm_string(:"=verify"), do: "OP_EQUALVERIFY"
+  defp do_to_asm_string(:"num="), do: "OP_NUMEQUAL"
   defp do_to_asm_string(:"num=verify"), do: "OP_NUMEQUALVERIFY"
 
   defp do_to_asm_string(atom) when is_atom(atom),
