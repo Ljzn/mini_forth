@@ -3,15 +3,12 @@
 -export([bin2num/1, eval/1, num2bin/1,
 	 simple_eval/1]).
 
-eval(S) ->
-    S1 = replace_notif(S, []),
-    eval(S1, [], []).
+eval(S) -> S1 = replace_notif(S, []), eval(S1, [], []).
 
 replace_notif([], R) -> lists:reverse(R);
 replace_notif([notif | S], R) ->
     replace_notif(['not', 'if' | S], R);
-replace_notif([H | S], R) ->
-    replace_notif(S, [H | R]).
+replace_notif([H | S], R) -> replace_notif(S, [H | R]).
 
 %% C: codes, M: main_stack, A: alt_stack
 
@@ -27,16 +24,20 @@ op('%', [Y, X | M]) -> [X rem Y | M];
 op('<', [Y, X | M]) -> [bool(X < Y) | M];
 op('>=', [Y, X | M]) -> [bool(X >= Y) | M];
 op('<=', [Y, X | M]) -> [bool(X =< Y) | M];
-op('&', [Y, X | M]) -> [X band Y | M];
+op('&', [Y, X | M]) -> [bitand(X, Y) | M];
 op('|', [Y, X | M]) -> [X bor Y | M];
 op('~', [X | M]) -> [bnot X | M];
-op('and', [Y, X | M]) -> [bool(bool(X) + bool(Y) == 2) | M];
-op('or', [Y, X | M]) -> [bool(bool(X) + bool(Y) > 0 ) | M];
+op('and', [Y, X | M]) ->
+    [bool(bool(X) + bool(Y) == 2) | M];
+op('or', [Y, X | M]) ->
+    [bool(bool(X) + bool(Y) > 0) | M];
 op('not', [X | M]) -> [logic_not(X) | M];
 op('^', [Y, X | M]) -> [X bxor Y | M];
-op('lshift', [Y, X | M]) -> [X bsl Y | M];
-op('rshift', [Y, X | M]) -> [X bsr Y | M];
+op(lshift, [Y, X | M]) -> [X bsl Y | M];
+op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
 op(size, [0 | M]) -> [0, 0 | M];
+op(size, [X | M]) when is_integer(X) ->
+    [byte_size(num2bin(X)), X | M];
 op(size, [X | M]) -> [byte_size(X), X | M];
 op(X, M) when is_integer(X) -> [X | M];
 % op(X, M)
@@ -60,7 +61,8 @@ op('-', [Y, X | M]) -> [X - Y | M];
 op('*', [Y, X | M]) -> [X * Y | M];
 op('/', [Y, X | M]) -> [X div Y | M];
 op(sha256, [H | M]) -> [crypto:hash(sha256, H) | M];
-op(ripemd160, [H | M]) -> [crypto:hash(ripemd160, H) | M];
+op(ripemd160, [H | M]) ->
+    [crypto:hash(ripemd160, H) | M];
 op('1-', [X | M]) -> [X - 1 | M];
 op(negate, [H | M]) -> [-H | M];
 op(bin2num, [H | M]) -> [bin2num(H) | M];
@@ -72,7 +74,7 @@ op(verify, [0 | _M]) -> io:format("verify failed.");
 op(verify, [false | _M]) -> io:format("verify failed.");
 op(verify, [<<>> | _M]) -> io:format("verify failed.");
 op(verify, [_X | M]) -> M;
-op('num=verify', [Y, X | M]) ->
+op('num=', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
       true -> [1 | M];
       false -> [0 | M]
@@ -96,8 +98,7 @@ op(checksignverify, M) ->
 op(checkmultisignverify, M) ->
     % TODO
     M;
-op(depth, M) ->
-    [length(M) | M];
+op(depth, M) -> [length(M) | M];
 op('.', [X | M]) -> io:format("~p ", [X]), M;
 op(cr, M) -> io:format("~n", []), M;
 op(pf_inv, [X | M]) -> [b_crypto:pf_inv(X) | M];
@@ -123,8 +124,7 @@ do_pick([H | M], N, A) -> do_pick(M, N - 1, [H | A]).
 
 roll(M, N) -> do_roll(M, N, []).
 
-do_roll([H | M], 0, A) ->
-    [H | lists:reverse(A) ++ M];
+do_roll([H | M], 0, A) -> [H | lists:reverse(A) ++ M];
 do_roll([H | M], N, A) -> do_roll(M, N - 1, [H | A]).
 
 split(B, P) ->
@@ -165,6 +165,7 @@ do_bin2num(<<1:1, D/bits>>) ->
 do_bin2num(<<0:1, _D/bits>> = B) ->
     binary:decode_unsigned(B).
 
+num2bin(N) when is_bitstring(N) -> N;
 num2bin(N) when N >= 0 ->
     B = binary:encode_unsigned(N),
     B1 = case B of
@@ -180,6 +181,8 @@ num2bin(N) ->
 	 end,
     flip_endian(B1).
 
+num2bin(_, 0) ->
+    error('SCRIPT_ERR_IMPOSSIBLE_ENCODING');
 num2bin(N, S) -> B = num2bin(N), pad_zeros(B, S).
 
 pad_zeros(B, S) ->
@@ -195,3 +198,25 @@ flip_endian(B) ->
     list_to_binary(lists:reverse(B1)).
 
 simple_eval(C) -> hd(element(1, eval(C))).
+
+bitand(A, B) when is_bitstring(A), is_bitstring(B) ->
+    case byte_size(A) == byte_size(B) of
+      true -> bitand(A, B, <<>>);
+      false -> error('SCRIPT_ERR_INVALID_OPERAND_SIZE')
+    end;
+bitand(A, B) -> bitand(num2bin(A), num2bin(B)).
+
+bitand(<<1:1, A/bits>>, <<1:1, B/bits>>, R) ->
+    bitand(A, B, <<R/bits, 1:1>>);
+bitand(<<_:1, A/bits>>, <<_:1, B/bits>>, R) ->
+    bitand(A, B, <<R/bits, 0:1>>);
+bitand(<<>>, <<>>, R) -> R.
+
+rshift(_, N) when is_integer(N), N < 0 ->
+    error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
+rshift(B, 0) -> B;
+rshift(B, N) when is_bitstring(B), is_integer(N) ->
+    Size = bit_size(B) - 1,
+    <<B1:Size/bits, _:1>> = B,
+    rshift(<<0:1, B1/bits>>, N - 1);
+rshift(B, N) -> B bsr N.
