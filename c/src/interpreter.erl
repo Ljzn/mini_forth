@@ -33,7 +33,7 @@ op('or', [Y, X | M]) ->
     [bool(bool(X) + bool(Y) > 0) | M];
 op('not', [X | M]) -> [logic_not(X) | M];
 op('^', [Y, X | M]) -> [X bxor Y | M];
-op(lshift, [Y, X | M]) -> [X bsl Y | M];
+op(lshift, [Y, X | M]) -> [lshift(X, Y) | M];
 op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
 op(size, [0 | M]) -> [0, 0 | M];
 op(size, [X | M]) when is_integer(X) ->
@@ -212,6 +212,7 @@ bitand(<<_:1, A/bits>>, <<_:1, B/bits>>, R) ->
     bitand(A, B, <<R/bits, 0:1>>);
 bitand(<<>>, <<>>, R) -> R.
 
+rshift(<<>>, _) -> <<>>;
 rshift(_, N) when is_integer(N), N < 0 ->
     error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
 rshift(B, 0) -> B;
@@ -220,3 +221,13 @@ rshift(B, N) when is_bitstring(B), is_integer(N) ->
     <<B1:Size/bits, _:1>> = B,
     rshift(<<0:1, B1/bits>>, N - 1);
 rshift(B, N) -> B bsr N.
+
+lshift(<<>>, _) -> <<>>;
+lshift(_, N) when is_integer(N), N < 0 ->
+    error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
+lshift(B, 0) -> B;
+lshift(B, N) when is_bitstring(B), is_integer(N) ->
+    Size = bit_size(B) - 1,
+    <<_:1, B1:Size/bits>> = B,
+    lshift(<<B1/bits, 0:1>>, N - 1);
+lshift(B, N) -> B bsl N.
