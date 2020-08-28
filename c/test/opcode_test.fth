@@ -22,9 +22,27 @@
 
     \ test less than or equal
     0 0 <= verify
+    10 11 <= verify
+    -11 -10 <= verify
 
     \ test greater than or equal
-    \ 0 0 >= verify
+    0 0 >= verify
+    11 0 >= verify
+    4 4 >= verify
+
+    \ test invert
+    <<0x01, 0x00>> ~
+    <<0xfe, 0xff>> =verify
+
+    -1 ~
+    <<0x7e>> =verify
+
+    \ test xor
+    0 0 ^
+    0 =verify
+
+    <<0xab>> <<0xcd>> ^
+    <<0x66>> =verify
 
     \ test mul
     <<0x05>> <<0x06>> *
@@ -42,6 +60,27 @@
 
     2147483647 dup +
     4294967294 =verify
+
+    \ test sub
+    111 1-
+    110 =verify
+
+    \ test negate
+    -1 negate
+    1 =verify
+
+    \ test mod
+    1 1 %
+    0 =verify
+
+    -1 1 %
+    0 =verify
+
+    82 23 %
+    13 =verify
+
+    8 -3 %
+    2 =verify
     
     \ test lshift
     <<0x9F, 0x11, 0xF5, 0x55>> 
@@ -64,4 +103,12 @@
 
     dup <<0x0F>> rshift
     <<0b00000000000000010011111000100011::32>> =verify
+
+    \ test if
+    0 if 0 else 1 endif verify
+    1 if 1 else 0 endif verify
+
+    \ test nofif
+    0 notif 1 else 0 endif verify
+    1 notif 0 else 1 endif verify
 ;

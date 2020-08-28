@@ -3,12 +3,7 @@
 -export([bin2num/1, eval/1, num2bin/1,
 	 simple_eval/1]).
 
-eval(S) -> S1 = replace_notif(S, []), eval(S1, [], []).
-
-replace_notif([], R) -> lists:reverse(R);
-replace_notif([notif | S], R) ->
-    replace_notif(['not', 'if' | S], R);
-replace_notif([H | S], R) -> replace_notif(S, [H | R]).
+eval(S) -> eval(S, [], []).
 
 %% C: codes, M: main_stack, A: alt_stack
 
@@ -21,11 +16,9 @@ eval(['if' | C], [H | M], A) ->
 eval([H | C], M, A) -> M1 = op(H, M), eval(C, M1, A).
 
 op(0, M) -> [<<>> | M];
-op('%', [Y, X | M]) -> [X rem Y | M];
 op('&', [Y, X | M]) -> [bitand(X, Y) | M];
-op('|', [Y, X | M]) -> [X bor Y | M];
-op('~', [X | M]) -> [bnot X | M];
-op('^', [Y, X | M]) -> [X bxor Y | M];
+op('|', [Y, X | M]) -> [bitor(X, Y) | M];
+op('~', [X | M]) -> [invert(X) | M];
 op(lshift, [Y, X | M]) -> [lshift(X, Y) | M];
 op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
 op(size, [0 | M]) -> [0, 0 | M];
@@ -50,11 +43,10 @@ op('+', [Y, X | M]) -> [add(X, Y) | M];
 op('-', [Y, X | M]) -> [sub(X, Y) | M];
 op('*', [Y, X | M]) -> [mul(X, Y) | M];
 op('/', [Y, X | M]) -> [divide(X, Y) | M];
+op('%', [Y, X | M]) -> [do_rem(X, Y) | M];
 op(sha256, [H | M]) -> [crypto:hash(sha256, H) | M];
 op(ripemd160, [H | M]) ->
     [crypto:hash(ripemd160, H) | M];
-op('1-', [X | M]) -> [X - 1 | M];
-op(negate, [H | M]) -> [-H | M];
 % there is only one data type in script -- binary
 % the OP_BIN2NUM is trimming the bytes into minimal encoding
 op(bin2num, [H | M]) -> [num2bin(bin2num(H)) | M];
@@ -189,18 +181,33 @@ flip_endian(B) ->
 
 simple_eval(C) -> hd(element(1, eval(C))).
 
-bitand(A, B) when is_bitstring(A), is_bitstring(B) ->
-    case byte_size(A) == byte_size(B) of
-      true -> bitand(A, B, <<>>);
-      false -> raise_error('SCRIPT_ERR_INVALID_OPERAND_SIZE')
-    end;
-bitand(A, B) -> bitand(num2bin(A), num2bin(B)).
+bitand(A, B) ->
+    bitand(A, B, <<>>).
 
 bitand(<<1:1, A/bits>>, <<1:1, B/bits>>, R) ->
     bitand(A, B, <<R/bits, 1:1>>);
 bitand(<<_:1, A/bits>>, <<_:1, B/bits>>, R) ->
     bitand(A, B, <<R/bits, 0:1>>);
 bitand(<<>>, <<>>, R) -> R.
+
+bitor(A, B) ->
+    bitor(A, B, <<>>).
+
+bitor(<<0:1, A/bits>>, <<0:1, B/bits>>, R) ->
+    bitor(A, B, <<R/bits, 0:1>>);
+bitor(<<_:1, A/bits>>, <<_:1, B/bits>>, R) ->
+    bitor(A, B, <<R/bits, 1:1>>);
+bitor(<<>>, <<>>, R) -> R.
+
+invert(A) ->
+    invert(A, <<>>).
+
+invert(<<0:1, A/bits>>, R) ->
+    invert(A, <<R/bits, 1:1>>);
+invert(<<1:1, A/bits>>, R) ->
+    invert(A, <<R/bits, 0:1>>);
+invert(<<>>, R) ->
+    R.
 
 rshift(<<>>, _) -> <<>>;
 rshift(_, N) when is_integer(N), N < 0 ->
@@ -230,6 +237,8 @@ sub(X, Y) ->
     num2bin(bin2num(X) - bin2num(Y)).
 divide(X, Y) ->
     num2bin(bin2num(X) / bin2num(Y)).
+do_rem(X, Y) ->
+    num2bin(bin2num(X) rem bin2num(Y)).
 
 raise_error(S) -> error(S).
 raise_error(S, Args) ->

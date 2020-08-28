@@ -1,10 +1,23 @@
-: not 0 num= if 1 else 0 endif ;
+: 1- ( a -- b )
+    1 - ;
 
-: rot tas swap fas swap ;
+: negate ( a -- b )
+    -1 * ;
 
-: 2dup over over ;
+: over ( a b -- a b a )
+    swap dup tas swap fas ;
 
-: 3dup 2 pick 2 pick 2 pick ;
+: not ( a -- b )
+    0 num= if 1 else 0 endif ;
+
+: rot ( a b c -- b c a )
+    tas swap fas swap ;
+
+: 2dup ( a b -- a b a b )
+    over over ;
+
+: 3dup ( a b c -- a b c a b c )
+    2 pick 2 pick 2 pick ;
 
 : 2swap rot tas rot fas ;
 
@@ -49,3 +62,8 @@
 : and * 0 num= not ;
 
 : verify not 0 num=verify ;
+
+: notif not if ;
+
+: ^ ( a b -- c )
+    2dup | ~ tas & fas | ~ ;
