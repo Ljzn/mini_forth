@@ -1,6 +1,6 @@
 # MiniForth
 
-A mini compiler which compiles the Forth like code into bitcoin opcodes.
+MiniForth is a typeless concatenative language, which can be compiled into bitcoin opcodes.
 
 ## Build from source
 

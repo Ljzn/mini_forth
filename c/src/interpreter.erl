@@ -39,7 +39,7 @@ op(size, [0 | M]) -> [0, 0 | M];
 op(size, [X | M]) when is_integer(X) ->
     [byte_size(num2bin(X)), X | M];
 op(size, [X | M]) -> [byte_size(X), X | M];
-op(X, M) when is_integer(X) -> [X | M];
+op(X, M) when is_integer(X) -> [num2bin(X) | M];
 % op(X, M)
 %     when is_integer(X) ->
 %   [binary:encode_unsigned(X) | M];
@@ -56,24 +56,27 @@ op(cat, [Y, X | M]) -> [<<X/binary, Y/binary>> | M];
 op(swap, [X, Y | M]) -> [Y, X | M];
 op(drop, [_X | M]) -> M;
 op(tuck, [X, Y | M]) -> [X, Y, X | M];
-op('+', [Y, X | M]) -> [X + Y | M];
-op('-', [Y, X | M]) -> [X - Y | M];
-op('*', [Y, X | M]) -> [X * Y | M];
-op('/', [Y, X | M]) -> [X div Y | M];
+op('+', [Y, X | M]) -> [add(X, Y) | M];
+op('-', [Y, X | M]) -> [sub(X, Y) | M];
+op('*', [Y, X | M]) -> [mul(X, Y) | M];
+op('/', [Y, X | M]) -> [divide(X, Y) | M];
 op(sha256, [H | M]) -> [crypto:hash(sha256, H) | M];
 op(ripemd160, [H | M]) ->
     [crypto:hash(ripemd160, H) | M];
 op('1-', [X | M]) -> [X - 1 | M];
 op(negate, [H | M]) -> [-H | M];
-op(bin2num, [H | M]) -> [bin2num(H) | M];
+% there is only one data type in script -- binary
+% the OP_BIN2NUM is trimming the bytes into minimal encoding
+op(bin2num, [H | M]) -> [num2bin(bin2num(H)) | M];
 op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
 op(dup, [H | M]) -> [H, H | M];
 op('=', [X, X | M]) -> [1 | M];
 op('=', [_Y, _X | M]) -> [0 | M];
-op(verify, [0 | _M]) -> error("verify failed.");
-op(verify, [false | _M]) -> error("verify failed.");
-op(verify, [<<>> | _M]) -> error("verify failed.");
-op(verify, [_X | M]) -> M;
+op(verify, [X | M]) ->
+    case bin2num(X) of
+        0 -> raise_error("Verify failed.");
+        _ -> M
+    end;
 op('num=', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
       true -> [1 | M];
@@ -83,13 +86,13 @@ op('num=verify', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
       true -> M;
       false ->
-	  error("equal_verify failed.\nleft: ~p, right: "
+	  raise_error("equal_verify failed.\nleft: ~p, right: "
 		    "~p~n",
 		    [X, Y])
     end;
 op('=verify', [X, X | M]) -> M;
 op('=verify', [Y, X | _M]) ->
-    error("equal_verify failed.\nleft: ~p, right: "
+    raise_error("equal_verify failed.\nleft: ~p, right: "
 	      "~p~n",
 	      [X, Y]);
 op(checksignverify, M) ->
@@ -128,8 +131,9 @@ do_roll([H | M], 0, A) -> [H | lists:reverse(A) ++ M];
 do_roll([H | M], N, A) -> do_roll(M, N - 1, [H | A]).
 
 split(B, P) ->
-    [binary:part(B, P, byte_size(B) - P),
-     binary:part(B, 0, P)].
+    P1 = bin2num(P),
+    [binary:part(B, P1, byte_size(B) - P1),
+     binary:part(B, 0, P1)].
 
 branches(C) -> split_branch(C, [], [], 0, t).
 
@@ -137,8 +141,6 @@ choose(0, _T, F) -> F;
 choose(false, _T, F) -> F;
 choose(_X, T, _F) -> T.
 
-logic_not(0) -> 1;
-logic_not(_X) -> 0.
 
 split_branch([endif | R], T, F, 0, _D) ->
     {lists:reverse(T), lists:reverse(F), R};
@@ -182,10 +184,11 @@ num2bin(N) ->
     flip_endian(B1).
 
 num2bin(_, 0) ->
-    error('SCRIPT_ERR_IMPOSSIBLE_ENCODING');
+    raise_error('SCRIPT_ERR_IMPOSSIBLE_ENCODING');
 num2bin(N, S) -> B = num2bin(N), pad_zeros(B, S).
 
-pad_zeros(B, S) ->
+pad_zeros(B, S0) ->
+    S = bin2num(S0),
     case byte_size(B) < S of
       true ->
 	  <<H:1, T/bits>> = flip_endian(B),
@@ -202,7 +205,7 @@ simple_eval(C) -> hd(element(1, eval(C))).
 bitand(A, B) when is_bitstring(A), is_bitstring(B) ->
     case byte_size(A) == byte_size(B) of
       true -> bitand(A, B, <<>>);
-      false -> error('SCRIPT_ERR_INVALID_OPERAND_SIZE')
+      false -> raise_error('SCRIPT_ERR_INVALID_OPERAND_SIZE')
     end;
 bitand(A, B) -> bitand(num2bin(A), num2bin(B)).
 
@@ -214,7 +217,7 @@ bitand(<<>>, <<>>, R) -> R.
 
 rshift(<<>>, _) -> <<>>;
 rshift(_, N) when is_integer(N), N < 0 ->
-    error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
+    raise_error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
 rshift(B, 0) -> B;
 rshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
@@ -224,10 +227,24 @@ rshift(B, N) -> rshift(num2bin(B), bin2num(N)).
 
 lshift(<<>>, _) -> <<>>;
 lshift(_, N) when is_integer(N), N < 0 ->
-    error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
+    raise_error('SCRIPT_ERR_INVALID_NUMBER_RANGE');
 lshift(B, 0) -> B;
 lshift(B, N) when is_bitstring(B), is_integer(N) ->
     Size = bit_size(B) - 1,
     <<_:1, B1:Size/bits>> = B,
     lshift(<<B1/bits, 0:1>>, N - 1);
 lshift(B, N) -> lshift(num2bin(B), bin2num(N)).
+
+mul(X, Y) ->
+    num2bin(bin2num(X) * bin2num(Y)).
+add(X, Y) ->
+    num2bin(bin2num(X) + bin2num(Y)).
+sub(X, Y) ->
+    num2bin(bin2num(X) - bin2num(Y)).
+divide(X, Y) ->
+    num2bin(bin2num(X) / bin2num(Y)).
+
+raise_error(S) -> error(S).
+raise_error(S, Args) ->
+    S1 = binary:list_to_bin(io_lib:format(S, Args)),
+    error(S1).

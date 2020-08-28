@@ -55,6 +55,8 @@ s([dip | T], [Q, X, Y | R]) ->
     step(lists:reverse(R) ++ [Y, Q, call, X] ++ T);
 s([call | T], [{quote, Q} | R]) ->
     step(lists:reverse(R) ++ Q ++ T);
+s([curry | T], [{quote, Q}, X | R]) ->
+    step(lists:reverse(R) ++ [{quote, [X | Q]} | T]);
 s([H|T], R) ->
     s(T, [H | R]);
 s([], R) ->
