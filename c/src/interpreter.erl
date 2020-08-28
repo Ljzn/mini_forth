@@ -20,18 +20,11 @@ eval(['if' | C], [H | M], A) ->
     eval(choose(H, T, F) ++ R, M, A);
 eval([H | C], M, A) -> M1 = op(H, M), eval(C, M1, A).
 
+op(0, M) -> [<<>> | M];
 op('%', [Y, X | M]) -> [X rem Y | M];
-op('<', [Y, X | M]) -> [bool(X < Y) | M];
-op('>=', [Y, X | M]) -> [bool(X >= Y) | M];
-op('<=', [Y, X | M]) -> [bool(X =< Y) | M];
 op('&', [Y, X | M]) -> [bitand(X, Y) | M];
 op('|', [Y, X | M]) -> [X bor Y | M];
 op('~', [X | M]) -> [bnot X | M];
-op('and', [Y, X | M]) ->
-    [bool(bool(X) + bool(Y) == 2) | M];
-op('or', [Y, X | M]) ->
-    [bool(bool(X) + bool(Y) > 0) | M];
-op('not', [X | M]) -> [bool(bin2num(X) == 0) | M];
 op('^', [Y, X | M]) -> [X bxor Y | M];
 op(lshift, [Y, X | M]) -> [lshift(X, Y) | M];
 op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
@@ -40,9 +33,6 @@ op(size, [X | M]) when is_integer(X) ->
     [byte_size(num2bin(X)), X | M];
 op(size, [X | M]) -> [byte_size(X), X | M];
 op(X, M) when is_integer(X) -> [num2bin(X) | M];
-% op(X, M)
-%     when is_integer(X) ->
-%   [binary:encode_unsigned(X) | M];
 op(X, M) when is_binary(X) -> [X | M];
 op(pick, [N | M]) -> pick(M, N);
 op(roll, [N | M]) -> roll(M, N);
@@ -72,11 +62,6 @@ op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
 op(dup, [H | M]) -> [H, H | M];
 op('=', [X, X | M]) -> [1 | M];
 op('=', [_Y, _X | M]) -> [0 | M];
-op(verify, [X | M]) ->
-    case bin2num(X) of
-        0 -> raise_error("Verify failed.");
-        _ -> M
-    end;
 op('num=', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
       true -> [1 | M];
@@ -115,10 +100,6 @@ op(dersig_encode, [S, R | M]) ->
     ['Elixir.DERSig':encode(R, S) | M];
 op({quote, _X} = Q, M) -> [Q | M].
 
-bool(0) -> 0;
-bool(false) -> 0;
-bool(_) -> 1.
-
 pick(M, N) -> do_pick(M, N, []).
 
 do_pick([H | M], 0, A) ->
@@ -137,9 +118,11 @@ split(B, P) ->
 
 branches(C) -> split_branch(C, [], [], 0, t).
 
-choose(0, _T, F) -> F;
-choose(false, _T, F) -> F;
-choose(_X, T, _F) -> T.
+choose(X, T, F) ->
+    case bin2num(X) of
+        0 -> F;
+        _ -> T
+    end.
 
 
 split_branch([endif | R], T, F, 0, _D) ->
@@ -159,6 +142,7 @@ split_branch([X | R], T, F, L, t) ->
 split_branch([X | R], T, F, L, f) ->
     split_branch(R, T, [X | F], L, f).
 
+bin2num(<<>>) -> 0;
 bin2num(B) when is_integer(B) -> B;
 bin2num(B) -> do_bin2num(flip_endian(B)).
 
@@ -167,6 +151,7 @@ do_bin2num(<<1:1, D/bits>>) ->
 do_bin2num(<<0:1, _D/bits>> = B) ->
     binary:decode_unsigned(B).
 
+num2bin(0) -> <<>>;
 num2bin(N) when is_bitstring(N) -> N;
 num2bin(N) when N >= 0 ->
     B = binary:encode_unsigned(N),
@@ -187,6 +172,8 @@ num2bin(_, 0) ->
     raise_error('SCRIPT_ERR_IMPOSSIBLE_ENCODING');
 num2bin(N, S) -> B = num2bin(N), pad_zeros(B, S).
 
+pad_zeros(<<>>, S) ->
+    <<0:(8*S)>>;
 pad_zeros(B, S0) ->
     S = bin2num(S0),
     case byte_size(B) < S of

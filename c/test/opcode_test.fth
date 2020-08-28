@@ -1,5 +1,31 @@
 : main 
 
+    \ test numbers
+    1 <<0x01>> =verify
+    8388608 <<0x00008000::4*8>> =verify
+    9223372036854775807 <<0xFFFFFFFFFFFFFF7F::8*8>> =verify
+
+    \ test negative numbers
+    -1 <<0x81>> =verify
+    -8388608 <<0x00008080::4*8>> =verify
+    -9223372036854775807 <<0xFFFFFFFFFFFFFFFF::8*8>> =verify
+
+    \ test num equal
+    <<0x100000::3*8>> <<0x10000000::4*8>> num=verify
+    <<0x000080::3*8>> <<0x00000080::4*8>> num=verify
+
+    \ test less than
+    -1 0 < verify
+
+    \ test greater than
+    1 0 > verify
+
+    \ test less than or equal
+    0 0 <= verify
+
+    \ test greater than or equal
+    \ 0 0 >= verify
+
     \ test mul
     <<0x05>> <<0x06>> *
     <<0x1E>> =verify
