@@ -44,34 +44,27 @@ collect_inline([H | C], R) ->
     collect_inline(C, [H | R]). 
 
 step(C) ->
-    'Elixir.MiniForth.U':debug(C, [{label, <<"Macro expanding">>}]),
-    s(C, []).
+    step(C, []).
 
-s([{inline, Code} | T], R) ->
-    step(lists:reverse(R) ++ [{e, X} || X <- Code] ++ T);
-s([{e, X} | T], R) ->
-    step(lists:reverse(eval(X, R)) ++ T);
-s([dip | T], [Q, X, Y | R]) ->
-    step(lists:reverse(R) ++ [Y, Q, call, X] ++ T);
-s([call | T], [{quote, Q} | R]) ->
-    step(lists:reverse(R) ++ Q ++ T);
-s([curry | T], [{quote, Q}, X | R]) ->
-    step(lists:reverse(R) ++ [{quote, [X | Q]} | T]);
-s([H|T], R) ->
-    s(T, [H | R]);
-s([], R) ->
+step(C, A) ->
+    'Elixir.MiniForth.U':debug(C, [{label, <<"Macro expanding">>}]),
+    s(C, [], A).
+
+s([{inline, Code} | T], R, A) ->
+    step(lists:reverse(R) ++ [{e, X} || X <- Code] ++ T, A);
+s([{e, X} | T], R, A) ->
+    {M, A1} = eval(X, R, A),
+    step(lists:reverse(M) ++ T, A1);
+s([dip | T], [Q, X, Y | R], A) ->
+    step(lists:reverse(R) ++ [Y, Q, call, X] ++ T, A);
+s([call | T], [{quote, Q} | R], A) ->
+    step(lists:reverse(R) ++ Q ++ T, A);
+s([curry | T], [{quote, Q}, X | R], A) ->
+    step(lists:reverse(R) ++ [{quote, [X | Q]} | T], A);
+s([H|T], R, A) ->
+    s(T, [H | R], A);
+s([], R, _) ->
     lists:reverse(R).
 
-%% Compile-time Opcodes
-%%
-%% If we need another opcode in the inline definition,
-%% should be added here.
-
-eval(over, [X, Y | R]) ->
-    [Y, X, Y | R];
-eval(swap, [X, Y | R]) ->
-    [Y, X | R];
-eval(dup, [X | R]) ->
-    [X, X | R];
-eval(Op, R) ->
-    [Op | R].
+eval(Op, M, A) ->
+    interpreter:eval([Op], M, A).

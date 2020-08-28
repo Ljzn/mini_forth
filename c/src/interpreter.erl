@@ -1,6 +1,6 @@
 -module(interpreter).
 
--export([bin2num/1, eval/1, num2bin/1,
+-export([bin2num/1, eval/1, eval/3, num2bin/1,
 	 simple_eval/1]).
 
 eval(S) -> eval(S, [], []).
@@ -13,7 +13,9 @@ eval([], M, A) -> {M, A};
 eval(['if' | C], [H | M], A) ->
     {T, F, R} = branches(C),
     eval(choose(H, T, F) ++ R, M, A);
-eval([H | C], M, A) -> M1 = op(H, M), eval(C, M1, A).
+eval([H | C], M, A) ->
+    % io:format("~p~n", [{H, C, M}]),
+    M1 = op(H, M), eval(C, M1, A).
 
 op(0, M) -> [<<>> | M];
 op('&', [Y, X | M]) -> [bitand(X, Y) | M];
@@ -21,10 +23,9 @@ op('|', [Y, X | M]) -> [bitor(X, Y) | M];
 op('~', [X | M]) -> [invert(X) | M];
 op(lshift, [Y, X | M]) -> [lshift(X, Y) | M];
 op(rshift, [Y, X | M]) -> [rshift(X, Y) | M];
-op(size, [0 | M]) -> [0, 0 | M];
-op(size, [X | M]) when is_integer(X) ->
-    [byte_size(num2bin(X)), X | M];
-op(size, [X | M]) -> [byte_size(X), X | M];
+op(size, [X | M]) -> 
+    % io:format("~p~n", [M]),
+    [num2bin(byte_size(X)), X | M];
 op(X, M) when is_integer(X) -> [num2bin(X) | M];
 op(X, M) when is_binary(X) -> [X | M];
 op(pick, [N | M]) -> pick(M, N);
@@ -32,9 +33,6 @@ op(roll, [N | M]) -> roll(M, N);
 op(over, [X, Y | M]) -> [Y, X, Y | M];
 op(nop, M) -> M;
 op(split, [P, B | M]) -> split(B, P) ++ M;
-op(cat, [0, 0 | M]) -> [<<>> | M];
-op(cat, [Y, 0 | M]) -> [Y | M];
-op(cat, [0, X | M]) -> [X | M];
 op(cat, [Y, X | M]) -> [<<X/binary, Y/binary>> | M];
 op(swap, [X, Y | M]) -> [Y, X | M];
 op(drop, [_X | M]) -> M;
@@ -52,12 +50,12 @@ op(ripemd160, [H | M]) ->
 op(bin2num, [H | M]) -> [num2bin(bin2num(H)) | M];
 op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
 op(dup, [H | M]) -> [H, H | M];
-op('=', [X, X | M]) -> [1 | M];
-op('=', [_Y, _X | M]) -> [0 | M];
+op('=', [X, X | M]) -> [<<1>> | M];
+op('=', [_Y, _X | M]) -> [<<>> | M];
 op('num=', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
-      true -> [1 | M];
-      false -> [0 | M]
+      true -> [<<1>> | M];
+      false -> [<<>> | M]
     end;
 op('num=verify', [Y, X | M]) ->
     case bin2num(Y) == bin2num(X) of
@@ -90,15 +88,15 @@ op(rand_bytes, [X | M]) ->
     [crypto:strong_rand_bytes(X) | M];
 op(dersig_encode, [S, R | M]) ->
     ['Elixir.DERSig':encode(R, S) | M];
-op({quote, _X} = Q, M) -> [Q | M].
+op(Q, M) -> [Q | M].
 
-pick(M, N) -> do_pick(M, N, []).
+pick(M, N) -> do_pick(M, bin2num(N), []).
 
 do_pick([H | M], 0, A) ->
     [H | lists:reverse(A) ++ [H | M]];
 do_pick([H | M], N, A) -> do_pick(M, N - 1, [H | A]).
 
-roll(M, N) -> do_roll(M, N, []).
+roll(M, N) -> do_roll(M, bin2num(N), []).
 
 do_roll([H | M], 0, A) -> [H | lists:reverse(A) ++ M];
 do_roll([H | M], N, A) -> do_roll(M, N - 1, [H | A]).

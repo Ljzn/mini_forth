@@ -111,4 +111,19 @@
     \ test nofif
     0 notif 1 else 0 endif verify
     1 notif 0 else 1 endif verify
+
+    \ test roll
+    22 21 20 0 roll
+    20 =verify
+
+    22 21 20 2 roll
+    22 =verify
+
+    \ test pick
+    22 21 20 0 pick
+    20 =verify
+
+    2 pick
+    22 =verify
+    
 ;

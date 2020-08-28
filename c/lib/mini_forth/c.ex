@@ -138,8 +138,8 @@ defmodule MiniForth.C do
     v
     |> U.debug(label: "before expand")
     |> :expander.expand()
-    |> U.debug(label: "after expand")
     |> :expander.step()
+    |> U.debug(label: "after expand")
   end
 
   defp expand_main(v, _), do: v
