@@ -143,4 +143,10 @@ defmodule MiniForth.C do
   end
 
   defp expand_main(v, _), do: v
+
+  @core_string File.read!("core/core.fth")
+
+  def interpret_core_word(op) do
+    @core_string |> parse() |> replace() |> Map.get(op) || [op]
+  end
 end

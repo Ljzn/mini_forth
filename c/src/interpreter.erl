@@ -14,7 +14,7 @@ eval(['if' | C], [H | M], A) ->
     {T, F, R} = branches(C),
     eval(choose(H, T, F) ++ R, M, A);
 eval([H | C], M, A) ->
-    % io:format("~p~n", [{H, C, M}]),
+    'Elixir.MiniForth.U':debug({H, C, M}, []),
     M1 = op(H, M), eval(C, M1, A).
 
 op(0, M) -> [<<>> | M];
@@ -70,9 +70,9 @@ op('=verify', [Y, X | _M]) ->
     raise_error("equal_verify failed.\nleft: ~p, right: "
 	      "~p~n",
 	      [X, Y]);
-op(checksignverify, M) ->
-    % TODO
-    M;
+op(checksig, [_Y, _X | M]) ->
+    % TODO always return true now
+    [<<1>> | M];
 op(checkmultisignverify, M) ->
     % TODO
     M;
@@ -160,7 +160,7 @@ num2bin(N) ->
 
 num2bin(_, 0) ->
     raise_error('SCRIPT_ERR_IMPOSSIBLE_ENCODING');
-num2bin(N, S) -> B = num2bin(N), pad_zeros(B, S).
+num2bin(N, S) -> B = num2bin(N), S1 = bin2num(S), pad_zeros(B, S1).
 
 pad_zeros(<<>>, S) ->
     <<0:(8*S)>>;

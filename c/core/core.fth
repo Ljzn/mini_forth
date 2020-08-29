@@ -67,3 +67,6 @@
 
 : ^ ( a b -- c )
     2dup | ~ tas & fas | ~ ;
+
+: checksigverify ( sig pubkey -- bool )
+    checksig verify ;

@@ -32,7 +32,10 @@ quote(L) ->
     {quote, L}.
 
 execute_latest_quote([{quote, L} | M], R) ->
-    lists:reverse(R) ++ [interpreter:simple_eval(L) | M];
+    L1 = ['Elixir.MiniForth.C':interpret_core_word(Op) || Op <- L],
+    L2 = lists:flatten(L1),
+    % io:format("~p~n", [L2]),
+    lists:reverse(R) ++ [interpreter:simple_eval(L2) | M];
 execute_latest_quote([H | M], R) ->
     execute_latest_quote(M, [H | R]);
 execute_latest_quote([], R) ->

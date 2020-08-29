@@ -67,4 +67,6 @@ s([], R, _) ->
     lists:reverse(R).
 
 eval(Op, M, A) ->
-    interpreter:eval([Op], M, A).
+    Ops = 'Elixir.MiniForth.C':interpret_core_word(Op),
+    % io:format("~p~n", [Ops]),
+    interpreter:eval(Ops, M, A).
