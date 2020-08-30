@@ -30,15 +30,10 @@ op(X, M) when is_integer(X) -> [num2bin(X) | M];
 op(X, M) when is_binary(X) -> [X | M];
 op(pick, [N | M]) -> pick(M, N);
 op(roll, [N | M]) -> roll(M, N);
-op(over, [X, Y | M]) -> [Y, X, Y | M];
-op(nop, M) -> M;
 op(split, [P, B | M]) -> split(B, P) ++ M;
 op(cat, [Y, X | M]) -> [<<X/binary, Y/binary>> | M];
-op(swap, [X, Y | M]) -> [Y, X | M];
 op(drop, [_X | M]) -> M;
-op(tuck, [X, Y | M]) -> [X, Y, X | M];
 op('+', [Y, X | M]) -> [add(X, Y) | M];
-op('-', [Y, X | M]) -> [sub(X, Y) | M];
 op('*', [Y, X | M]) -> [mul(X, Y) | M];
 op('/', [Y, X | M]) -> [divide(X, Y) | M];
 op('%', [Y, X | M]) -> [do_rem(X, Y) | M];
@@ -49,7 +44,6 @@ op(ripemd160, [H | M]) ->
 % the OP_BIN2NUM is trimming the bytes into minimal encoding
 op(bin2num, [H | M]) -> [num2bin(bin2num(H)) | M];
 op(num2bin, [Y, X | M]) -> [num2bin(X, Y) | M];
-op(dup, [H | M]) -> [H, H | M];
 op('=', [X, X | M]) -> [<<1>> | M];
 op('=', [_Y, _X | M]) -> [<<>> | M];
 op('num=', [Y, X | M]) ->
@@ -231,8 +225,6 @@ mul(X, Y) ->
     num2bin(bin2num(X) * bin2num(Y)).
 add(X, Y) ->
     num2bin(bin2num(X) + bin2num(Y)).
-sub(X, Y) ->
-    num2bin(bin2num(X) - bin2num(Y)).
 divide(X, Y) ->
     num2bin(bin2num(X) / bin2num(Y)).
 do_rem(X, Y) ->

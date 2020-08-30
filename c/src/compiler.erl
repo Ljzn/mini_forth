@@ -45,7 +45,9 @@ execute_latest_quote([], R) ->
 
 unroll(S) -> unroll_loop(S, [], 0).
 
-unroll_loop([do | C], [S, E | M], J) when is_integer(S), is_integer(E) ->
+unroll_loop([do | C], [S0, E0 | M], J) ->
+    S = interpreter:bin2num(S0),
+    E = interpreter:bin2num(E0),
     {P, C1, Step} = find_loop_part(C, 0, []),
     C2 = loops(P, S, E, [], S, J, Step) ++ C1,
     unroll_loop(C2, M, J);

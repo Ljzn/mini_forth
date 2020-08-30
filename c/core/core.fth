@@ -1,8 +1,22 @@
+: nop ;
+
+: swap
+    1 roll ;
+
+: over
+    1 pick ;
+
+: dup
+    0 pick ;
+
 : 1- ( a -- b )
     1 - ;
 
 : negate ( a -- b )
     -1 * ;
+
+: -
+    negate + ;
 
 : over ( a b -- a b a )
     swap dup tas swap fas ;
@@ -12,6 +26,9 @@
 
 : rot ( a b c -- b c a )
     tas swap fas swap ;
+
+: tuck
+    dup rot rot ;
 
 : 2dup ( a b -- a b a b )
     over over ;

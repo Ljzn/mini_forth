@@ -125,5 +125,32 @@
 
     2 pick
     22 =verify
-    
+
+    \ test drop
+    0 1 2 3 drop
+    2 =verify
+    drop
+    0 =verify
+
+    \ test swap
+    1 2 swap
+    1 =verify
+    2 =verify
+
+    \ test over
+    1 2 over
+    1 =verify
+    2 1 over
+    2 =verify
+
+    \ test tuck
+    1 2 tuck
+    2 =verify
+    1 =verify
+    2 =verify
+
+    \ test dup
+    1 0 pick
+    1 =verify
+    1 =verify
 ;
