@@ -140,8 +140,17 @@
     \ test over
     1 2 over
     1 =verify
-    2 1 over
     2 =verify
+    1 =verify
+
+    \ test 2over
+    1 2 3 4 2over
+    2 =verify
+    1 =verify
+    4 =verify
+    3 =verify
+    2 =verify
+    1 =verify
 
     \ test tuck
     1 2 tuck
@@ -150,7 +159,24 @@
     2 =verify
 
     \ test dup
-    1 0 pick
+    1 dup
     1 =verify
     1 =verify
+
+    \ test 2dup
+    1 2 2dup
+    2 =verify
+    1 =verify
+    2 =verify
+    1 =verify
+
+    \ test 3dup
+    1 2 3 3dup
+    3 =verify
+    2 =verify
+    1 =verify
+    3 =verify
+    2 =verify
+    1 =verify
+
 ;

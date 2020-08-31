@@ -82,6 +82,10 @@ op(rand_bytes, [X | M]) ->
     [crypto:strong_rand_bytes(X) | M];
 op(dersig_encode, [S, R | M]) ->
     ['Elixir.DERSig':encode(R, S) | M];
+%% Compile Time Opcodes
+op(dip, M)  -> [dip | M];
+op(call, M)  -> [call | M];
+op(E, _M) when is_atom(E) -> raise_error(E);
 op(Q, M) -> [Q | M].
 
 pick(M, N) -> do_pick(M, bin2num(N), []).
