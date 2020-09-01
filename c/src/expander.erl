@@ -7,7 +7,8 @@
 
 expand(C) ->
     C1 = check_inlines(C, []),
-    mix_inlines(C1, []).
+    C2 = check_seq(C1, []),
+    mix_inlines(C2, []).
 
 mix_inlines([OP | C], M) ->
     case op(OP, C, M) of
@@ -22,6 +23,14 @@ check_inlines([inline_start | C], R) ->
 check_inlines([H | C], R) ->
     check_inlines(C, [H | R]);
 check_inlines([], R) ->
+    lists:reverse(R).
+
+check_seq(['{' | C], R) ->
+    {I, R1} = collect_seq(C, []),
+    lists:reverse(R) ++ [I | R1];
+check_seq([H | C], R) ->
+    check_seq(C, [H | R]);
+check_seq([], R) ->
     lists:reverse(R).
 
 op({inline, Q}, C, M) ->
@@ -42,6 +51,18 @@ collect_inline([{quote, L} | C], R) ->
     collect_inline(C, [{quote, check_inlines(L, [])} | R]); 
 collect_inline([H | C], R) ->
     collect_inline(C, [H | R]). 
+
+collect_seq(['}' | C], R) ->
+    {{seq, lists:reverse(R)}, C};
+collect_seq(['{' | C], R) ->
+    {P, C1} = collect_seq(C, []),
+    collect_seq(C1, [P | R]);
+collect_seq([H | C], R) when is_list(H) ->
+    collect_seq(C, [check_seq(H, []) | R]); 
+collect_seq([{quote, L} | C], R) ->
+    collect_seq(C, [{quote, check_seq(L, [])} | R]); 
+collect_seq([H | C], R) ->
+    collect_seq(C, [H | R]). 
 
 step(C) ->
     step(C, []).

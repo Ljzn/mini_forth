@@ -1,3 +1,7 @@
+: true 1 ;
+
+: false 0 ;
+
 : nop ;
 
 : swap

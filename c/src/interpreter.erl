@@ -236,5 +236,5 @@ do_rem(X, Y) ->
 
 raise_error(S) -> error(S).
 raise_error(S, Args) ->
-    S1 = binary:list_to_bin(io_lib:format(S, Args)),
+    S1 = io:format(S, Args),
     error(S1).

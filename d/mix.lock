@@ -1,0 +1,3 @@
+%{
+  "cubdb": {:hex, :cubdb, "1.0.0-rc.4", "4a1e2ea3f249299551fe3275c047dc7b3224573955bf38cead1b7605cdcb3828", [:mix], [], "hexpm", "b73bf10e0210a8410d216e199c4f60f02454180d3f1234d3aff56a5d95d18095"},
+}
