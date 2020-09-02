@@ -22,19 +22,19 @@
     no_negative
     bin2num
     dup notif <<0>> else
-    choose_prefix
-    swap to_unsign
+    choose_prefix_and_size
+    rot swap to_unsign
     endif
     cat
 ;
 
 \ helpers
 
-: choose_prefix ( int -- int prefix ) 
-    dup 0xfd < if 0 else
-    dup 0xffff < if <<0xFD>> else
-    dup 0xffffffff < if <<0xFE>> else
-    dup 0xffffffffffffffff < if <<0xFF>> else
+: choose_prefix_and_size ( int -- int prefix size ) 
+    dup 0xfd < if 0 1 else
+    dup 0xffff <= if <<0xFD>> 2 else
+    dup 0xffffffff <= if <<0xFE>> 4 else
+    dup 0xffffffffffffffff <= if <<0xFF>> 8 else
     \ abort when number too large
     0 verify 
     endif endif endif endif
@@ -44,10 +44,8 @@
     dup 0 >= verify
 ;
 
-: to_unsign ( int -- bytes )
-    dup last_byte
-    notif 8 rshift
-    endif
+: to_unsign ( int size -- bytes )
+    dup tas 1+ num2bin fas split drop
 ;
 
 : last_byte ( a -- byte )
@@ -61,6 +59,9 @@
     256 num=verify
 
     \ varint
+    65535 varint
+    <<0xFD, 0xFF, 0xFF>> =verify
+
     256 varint
     <<0xFD, 0x00, 0x01>> =verify
 

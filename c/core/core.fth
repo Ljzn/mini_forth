@@ -54,9 +54,7 @@
 
 : nip swap drop ;
 
-: 1add 1 + ;
-
-: 1sub 1 - ;
+: 1+ 1 + ;
 
 : min 2dup < if drop else nip endif ;
 

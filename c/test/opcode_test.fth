@@ -55,7 +55,7 @@
     <<0xE4, 0xB6, 0xF9, 0x59, 0x05, 0x4F, 0xDA, 0x00>> =verify
 
     \ test add
-    -2 1add
+    -2 1+
     -1 =verify
 
     2147483647 dup +
