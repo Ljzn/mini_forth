@@ -7,7 +7,7 @@ defmodule MiniForth do
   options:
     --debug     Print debug info.
   """
-  alias MiniForth.{C}
+  alias MiniForth.{C, U}
 
   def main([]) do
     IO.puts(@moduledoc)
@@ -120,10 +120,8 @@ defmodule MiniForth do
   end
 
   defp print_stacks({m, a}) do
-    IO.puts("[EVAL RESULT]")
-    IO.puts("MainStack: " <> inspect(Enum.reverse(m)))
-    IO.puts("AltStack:  " <> inspect(Enum.reverse(a)))
-    IO.puts("")
+    IO.puts("[>>> RESULT <<<]")
+    U.print_stack(m, a)
   end
 end
 

@@ -7,7 +7,7 @@
     dup = <<0xFE>> if drop fas 4 split else
     dup = <<0xFF>> if drop fas 8 split else
     fas cat 0 endif endif endif
-    swap add_sign swap
+    swap add_sign print_stack swap
 ;
 
 \ helpers

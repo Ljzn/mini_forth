@@ -7,6 +7,11 @@ eval(S) -> eval(S, [], []).
 
 %% C: codes, M: main_stack, A: alt_stack
 
+%% Plugin OPCodes
+eval([print_stack | C], M, A) ->
+    'Elixir.MiniForth.U':print_stack(M, A),
+    eval(C, M, A);
+%% Bitcoin OPCodes
 eval([tas | C], [X | M], A) -> eval(C, M, [X | A]);
 eval([fas | C], M, [X | A]) -> eval(C, [X | M], A);
 eval([], M, A) -> {M, A};
