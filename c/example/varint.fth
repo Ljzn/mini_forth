@@ -50,10 +50,6 @@
     endif
 ;
 
-: prefix ( a pre -- prea )
-    swap cat
-;
-
 : last_byte ( a -- byte )
     size 1- split nip
 ;
