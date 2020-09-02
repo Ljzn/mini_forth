@@ -4,6 +4,10 @@ defmodule MiniForth.C do
   """
   alias MiniForth.{P, U}
 
+  @ignore_ops ~w(
+    print_stack
+  )a
+
   @doc """
   Parse the string code into a map of definations.
 
@@ -79,7 +83,9 @@ defmodule MiniForth.C do
   end
 
   def to_asm_string(list) do
-    Enum.map(list, &do_to_asm_string/1)
+    list
+    |> Enum.reject(fn x -> x in @ignore_ops end)
+    |> Enum.map(&do_to_asm_string/1)
     |> Enum.join(" ")
   end
 
