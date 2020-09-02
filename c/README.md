@@ -79,6 +79,7 @@ Other opcodes are expressed with downcase words, for example: `drop swap` stands
 | -------------- | ---------------------------------------- | --------------------- |
 | .              | ignore                                   | Print the top element |
 | cr             | ignore                                   | Print a new line      |
+| print_stack    | ignore                                   | Print two stacks      |
 
 ## Syntax
 
