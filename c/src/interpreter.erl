@@ -76,7 +76,7 @@ op(checkmultisignverify, M) ->
     % TODO
     M;
 op(depth, M) -> [length(M) | M];
-op('.', [X | M]) -> io:format("~p ", [X]), M;
+op('.', [X | M]) -> io:format("~p ", [X]), [X | M];
 op(cr, M) -> io:format("~n", []), M;
 op(pf_inv, [X | M]) -> [b_crypto:pf_inv(X) | M];
 op(privkey_to_compressed_pubkey, [X | M]) ->
