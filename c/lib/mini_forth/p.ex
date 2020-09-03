@@ -66,7 +66,8 @@ defmodule MiniForth.P do
         ?^,
         ?~,
         ?{,
-        ?}
+        ?},
+        ?:
       ],
       min: 1
     )

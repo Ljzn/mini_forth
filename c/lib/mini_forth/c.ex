@@ -6,6 +6,8 @@ defmodule MiniForth.C do
 
   @ignore_ops ~w(
     print_stack
+    cr
+    .
   )a
 
   @doc """
@@ -20,14 +22,7 @@ defmodule MiniForth.C do
   """
   def parse(str) do
     # delete \ comments
-    str =
-      str
-      |> String.split("\n")
-      |> Enum.reject(fn x ->
-        x = String.trim_leading(x)
-        String.starts_with?(x, "\\")
-      end)
-      |> Enum.join("\n")
+    str = delete_slash_comments(str)
 
     {:ok, result, _, _, _, _} =
       P.simple_forth(str)
@@ -37,6 +32,55 @@ defmodule MiniForth.C do
       {k, v}
     end
     |> U.debug(label: "parsed", limit: :infinity)
+    |> inject_imports()
+  end
+
+  defp delete_slash_comments(str) do
+    str
+    |> String.split("\n")
+    |> Enum.reject(fn x ->
+      x = String.trim_leading(x)
+      String.starts_with?(x, "\\")
+    end)
+    |> Enum.join("\n")
+  end
+
+  def inject_imports(dict) do
+    case dict[:import] do
+      nil ->
+        dict
+
+      imports when is_list(imports) ->
+        Enum.reduce(imports, dict, fn path, acc ->
+          path = extension(path)
+
+          read_imports_code(path)
+          |> parse()
+          |> replace()
+          |> add_module_prefix(path)
+          |> Map.merge(acc)
+        end)
+    end
+  end
+
+  defp extension(path) do
+    if String.ends_with?(path, ".fth") do
+      path
+    else
+      path <> ".fth"
+    end
+  end
+
+  defp read_imports_code(path) do
+    File.read!(path)
+  end
+
+  defp add_module_prefix(dict, path) do
+    module_name = Path.basename(path, ".fth")
+
+    for {k, v} <- dict, into: %{} do
+      {String.to_atom(module_name <> ":" <> Atom.to_string(k)), v}
+    end
   end
 
   @doc """

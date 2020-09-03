@@ -101,6 +101,19 @@ The syntax is basically a simplified version of Forth language.
     split drop ;
 ```
 
+### Import other file
+
+```fth
+: import 
+    "./example/binary"
+;
+
+: main
+    "abcde" 1 2 binary:substr
+    "bc" =verify    
+;
+```
+
 ## Compile time macros
 
 ### Loop
