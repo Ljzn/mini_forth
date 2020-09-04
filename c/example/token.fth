@@ -1,3 +1,7 @@
+: import
+    "core/base"
+;
+
 \ Consts
 
 : R_MUL_PRIVATEKEY 0 ;
@@ -9,7 +13,7 @@
 \ OP_PUSH_TX
 
 : push_tx ( preimage -- bool )
-    hash256 hash2num
+    hash256 base:decode256
     R_MUL_PRIVATEKEY +
     INVERSE_K *
     N tuck %
@@ -17,10 +21,6 @@
     der_encoding
     SIGHASH_FLAG cat
     PUBKEY checksigverify
-;
-
-: hash2num ( bytes -- int )
-    32 reverse_n_bytes <<0>> cat
 ;
 
 : COMPOND <<0x30>> ;

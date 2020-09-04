@@ -10,6 +10,10 @@
     <<0>> cat bin2num
 ;
 
+: to_uint ( signed -- unsigned )
+    size dup tas 1+ num2bin fas split drop
+;
+
 : reverse256 ( bytes -- reversed_bytes )
     32 [ 0 do 1 split loop ] [ 0 do swap cat loop ] bi
 ;
@@ -19,4 +23,10 @@
     decode256
     9600092370698485722880671127416733821119464114058201285631723395862080735378
     =verify
+
+    100 dup
+    to_uint
+    from_uint
+    =verify
+    
 ;
