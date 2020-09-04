@@ -2,7 +2,6 @@ defmodule MiniForth.U do
   @moduledoc """
   Utils.
   """
-  alias MiniForth.P
 
   def debug(msg, opts) do
     if Application.get_env(:elixir, :mini_forth_debug, false) do
