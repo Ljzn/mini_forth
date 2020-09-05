@@ -17,7 +17,7 @@ mix_inlines([OP | C], M) ->
     end;
 mix_inlines([], M) -> lists:reverse(M).
 
-check_inlines([inline_start | C], R) ->
+check_inlines([macro_start | C], R) ->
     {I, R1} = collect_inline(C, []),
     lists:reverse(R) ++ [I | R1];
 check_inlines([H | C], R) ->
@@ -33,16 +33,16 @@ check_seq([H | C], R) ->
 check_seq([], R) ->
     lists:reverse(R).
 
-op({inline, Q}, C, M) ->
-    {C, [{inline, expand(Q)} | M]};
+op({macro, Q}, C, M) ->
+    {C, [{macro, expand(Q)} | M]};
 op({quote, Q}, C, M) ->
     {C, [{quote, expand(Q)} | M]};
 op(X, C, M) ->
     {C, [X | M]}.
 
-collect_inline([inline_end | C], R) ->
-    {{inline, lists:reverse(R)}, C};
-collect_inline([inline_start | C], R) ->
+collect_inline([macro_end | C], R) ->
+    {{macro, lists:reverse(R)}, C};
+collect_inline([macro_start | C], R) ->
     {P, C1} = collect_inline(C, []),
     collect_inline(C1, [P | R]);
 collect_inline([H | C], R) when is_list(H) ->
@@ -71,17 +71,17 @@ step(C, A) ->
     'Elixir.MiniForth.U':debug(C, [{label, <<"Macro expanding">>}]),
     s(C, [], A).
 
-s([{inline, Code} | T], R, A) ->
+s([{macro, Code} | T], R, A) ->
     step(lists:reverse(R) ++ [{e, X} || X <- Code] ++ T, A);
 s([{e, X} | T], R, A) ->
     {M, A1} = eval(X, R, A),
     step(lists:reverse(M) ++ T, A1);
-s([dip | T], [Q, X, Y | R], A) ->
-    step(lists:reverse(R) ++ [Y, Q, call, X] ++ T, A);
 s([call | T], [{quote, Q} | R], A) ->
     step(lists:reverse(R) ++ Q ++ T, A);
 s([curry | T], [{quote, Q}, X | R], A) ->
     step(lists:reverse(R) ++ [{quote, [X | Q]} | T], A);
+s([eval | T], [{quote, Q} | R], A) ->
+    step(lists:reverse(R) ++ [{e, X} || X <- Q] ++ T, A);
 s([H|T], R, A) ->
     s(T, [H | R], A);
 s([], R, _) ->
@@ -89,5 +89,7 @@ s([], R, _) ->
 
 eval(Op, M, A) ->
     Ops = 'Elixir.MiniForth.C':interpret_core_word(Op),
-    % io:format("~p~n", [Ops]),
-    interpreter:eval(Ops, M, A).
+    io:format("b:~p~n", [Ops]),
+    Ops1 = step(lists:reverse(M) ++ Ops),
+    io:format("a:~p~n", [Ops1]),
+    interpreter:eval(Ops1, [], A).

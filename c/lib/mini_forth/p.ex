@@ -11,9 +11,9 @@ defmodule MiniForth.P do
     {[{k, v |> List.flatten() |> Enum.reject(&is_nil/1)}], context}
   end
 
-  defp normalize_definition(["inline" | d]) do
+  defp normalize_definition(["macro" | d]) do
     [k | v] = normalize_definition(d)
-    [k, :inline_start | v] ++ [:inline_end]
+    [k, :macro_start | v] ++ [:macro_end]
   end
 
   defp normalize_definition(d) do
@@ -120,7 +120,7 @@ defmodule MiniForth.P do
     )
     |> string(";")
     |> repeat(ignore(string(" ")))
-    |> optional(string("inline"))
+    |> optional(string("macro"))
     |> optional(ignore(comment))
     |> repeat(ignore(choice([string("\n"), string(" ")])))
     |> optional(ignore(comment))

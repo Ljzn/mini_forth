@@ -69,7 +69,7 @@ There're some code examples in `/example` directory.
 - OP_CHECKMULTISIG
 - OP_CHECKMULTISIGVERIFY
 
-### Other Opcodes
+### Other Core Opcodes
 
 Other opcodes are expressed with downcase words, for example: `drop swap` stands for `OP_DROP OP_SWAP`.
 
@@ -138,6 +138,37 @@ The syntax is basically a simplified version of Forth language.
 
 \ this code equal to `: two 2 ;`
 : two [ 1 1 + ] literal ;
+```
+
+## Macros
+
+### compile-time opcodes
+
+| MiniForth Code | Example                        | Description                             |
+| -------------- | ------------------------------ | --------------------------------------- |
+| eval           | [ 1 1 + ] eval ---> 2          | Execute the quote                       |
+| curry          | 1 [ 1 + ] curry ---> [ 1 1 + ] | Merge the second element into the quote |
+| call           | [ 1 1 + ] call ---> 1 1 +      | Unquote                                 |
+
+### `macro_start`, `macro_end`
+
+The code between `macro_start` and `macro_end` will be executed at compile time.
+
+```fth
+\ we can define such a function
+\ which takes 2 args, one is compile
+\ time arg, and another is runtime arg
+
+: simple_macro ( compile_time_arg runtime_arg -- a b )
+    [ 3 + ]
+    macro_start
+        swap tas curry eval fas
+    macro_end
+    +
+;
+
+\ compiled code: 4 2 + ;
+: main 1 2 simple_macro ;
 ```
 
 ### bi, tri
