@@ -26,12 +26,12 @@ defmodule MiniForth.C do
 
     {:ok, result, _, _, _, _} =
       P.simple_forth(str)
-      |> U.debug(lable: "after parse")
+      # |> U.debug(lable: "after parse")
 
     for {k, v} <- result, into: %{} do
       {k, v}
     end
-    |> U.debug(label: "parsed", limit: :infinity)
+    # |> U.debug(label: "parsed", limit: :infinity)
     |> inject_imports()
   end
 

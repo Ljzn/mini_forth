@@ -19,7 +19,7 @@ mix_inlines([], M) -> lists:reverse(M).
 
 check_inlines([macro_start | C], R) ->
     {I, R1} = collect_inline(C, []),
-    lists:reverse(R) ++ [I | R1];
+    check_inlines(lists:reverse(R) ++ [I | R1], []);
 check_inlines([H | C], R) ->
     check_inlines(C, [H | R]);
 check_inlines([], R) ->
@@ -68,7 +68,7 @@ step(C) ->
     step(C, []).
 
 step(C, A) ->
-    'Elixir.MiniForth.U':debug(C, [{label, <<"Macro expanding">>}]),
+    'Elixir.MiniForth.U':debug({C, A}, [{label, <<"Macro expanding">>}]),
     s(C, [], A).
 
 s([{macro, Code} | T], R, A) ->
@@ -76,20 +76,24 @@ s([{macro, Code} | T], R, A) ->
 s([{e, X} | T], R, A) ->
     {M, A1} = eval(X, R, A),
     step(lists:reverse(M) ++ T, A1);
-s([call | T], [{quote, Q} | R], A) ->
-    step(lists:reverse(R) ++ Q ++ T, A);
-s([curry | T], [{quote, Q}, X | R], A) ->
-    step(lists:reverse(R) ++ [{quote, [X | Q]} | T], A);
-s([eval | T], [{quote, Q} | R], A) ->
-    step(lists:reverse(R) ++ [{e, X} || X <- Q] ++ T, A);
+s([Op | T], R, A) when Op == call; Op == curry; Op == eval ->
+    R1 = cop(Op, R),
+    step(lists:reverse(R1) ++ T, A);
 s([H|T], R, A) ->
     s(T, [H | R], A);
 s([], R, _) ->
     lists:reverse(R).
 
+%% compile-time ops
+cop(call, [{quote, Q} | M]) ->
+    lists:reverse(Q) ++ M;
+cop(curry, [{quote, Q}, X | M]) ->
+    [{quote, [X | Q]} | M];
+cop(eval, [{quote, Q} | M]) ->
+    lists:reverse([{e, X} || X <- Q]) ++ M.
+
+eval(Op, M, A) when Op == call; Op == curry; Op == eval ->
+    {cop(Op, M), A};
 eval(Op, M, A) ->
     Ops = 'Elixir.MiniForth.C':interpret_core_word(Op),
-    io:format("b:~p~n", [Ops]),
-    Ops1 = step(lists:reverse(M) ++ Ops),
-    io:format("a:~p~n", [Ops1]),
-    interpreter:eval(Ops1, [], A).
+    interpreter:eval(Ops, M, A).
