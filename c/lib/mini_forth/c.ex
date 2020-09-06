@@ -24,9 +24,8 @@ defmodule MiniForth.C do
     # delete \ comments
     str = delete_slash_comments(str)
 
-    {:ok, result, _, _, _, _} =
-      P.simple_forth(str)
-      # |> U.debug(lable: "after parse")
+    {:ok, result, _, _, _, _} = P.simple_forth(str)
+    # |> U.debug(lable: "after parse")
 
     for {k, v} <- result, into: %{} do
       {k, v}

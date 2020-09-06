@@ -78,6 +78,15 @@ defmodule MiniForth do
     |> C.compile()
   end
 
+  def to_asm(code) do
+    {_, core_ext} = prelude()
+
+    concat(core_ext, code)
+    |> full_compile()
+    |> Map.get(:main)
+    |> C.to_asm_string()
+  end
+
   defp try_to_run_sv_code(arg) do
     {core, core_ext} = prelude()
     code = concat(core_ext, File.read!(arg))
