@@ -13,8 +13,8 @@ defmodule MiniForth.U do
 
   def print_stack(main, alt) do
     IO.puts("")
-    IO.puts("[Alt Stack]: " <> inspect(Enum.reverse(alt)))
-    IO.puts("[MainStack]: " <> inspect(Enum.reverse(main)))
+    IO.puts("[Alt Stack]: " <> inspect(Enum.reverse(alt), binaries: :as_binaries))
+    IO.puts("[MainStack]: " <> inspect(Enum.reverse(main), binaries: :as_binaries))
     IO.puts("")
   end
 end
