@@ -10,8 +10,12 @@
     <<0>> cat bin2num
 ;
 
-: to_uint ( signed -- unsigned )
+: to_unsigned ( signed -- unsigned )
     size dup tas 1+ num2bin fas split drop
+;
+
+: to_big_unsigned256 ( integer -- bytes )
+    32 num2bin reverse256
 ;
 
 : reverse256 ( bytes -- reversed_bytes )
@@ -25,7 +29,7 @@
     =verify
 
     100 dup
-    to_uint
+    to_unsigned
     from_uint
     =verify
     
