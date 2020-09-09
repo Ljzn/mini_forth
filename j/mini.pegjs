@@ -1,4 +1,99 @@
+/*
+Parsing the MiniForth code into the ASM string of bitcoin opcodes.
+Copyright (C) 2020  Venezia(390@moneybutton.com)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 {
+	function alias(op) {
+    	op = op.replace(/^WORD:/g, '');
+    	let full = {
+        	tas: 'toaltstack',
+            fas: 'fromaltstack',
+        }[op];
+        if(full) {
+        	return 'OP_' + full.toUpperCase()
+        }
+    }
+
+	function toASM(dict) {
+    	let main = dict.get("WORD:main");
+        main.reverse();
+        let asm = '';
+        // console.log(main)
+        while(main.length > 0) {
+        	let h = main.pop();
+            let s;
+            if(Number.isInteger(h)) {
+            	s = minimal_encode(h);
+            } else if(alias(h)){
+            	s = alias(h);
+            } else if(h.startsWith('WORD:')) {
+            	s = h.replace(/^WORD:/g, 'OP_').toUpperCase();
+            } else {
+            	s = h;
+            }
+            asm = asm + ' ' + s;
+        }
+        console.log(asm);
+        return asm.trimStart();
+    }
+	function unroll(dict) {
+    	let main = dict.get("WORD:main");
+        if(!main) {
+        	error("Must have a 'main' word defined")
+        }
+       	main = main.reverse();
+        var m1 = [];
+        while(main.length > 0) {
+        	let h = main.pop();
+            if(h == 'WORD:do') {
+            	let start = m1.pop();
+                let stop = m1.pop();
+				if(!(Number.isInteger(start)&&Number.isInteger(stop))) {
+                	error('The start and stop params of loop must be known at compile time')
+                }
+                var loop = [];
+                var step = 1;
+                while(main.length > 0) {
+                	let h = main.pop();
+                    if(h == 'WORD:loop') {
+                        break;
+                    } else {
+                    	loop.push(h);
+                    }
+                }
+                for(let i = start; i < stop; i++) {
+                	let loop1 = JSON.parse(JSON.stringify(loop));
+                	for(let j = 0; j < loop.length; j++) {
+                        if(loop[j] == 'WORD:i') {
+                        	loop1[j] = i;
+                        }
+                    }
+                	m1 = m1.concat(loop1);
+                }
+            } else {
+            	m1.push(h);
+            }
+        }
+        
+        dict.set('WORD:main', m1);
+        
+        return dict
+    }
+    
 	function replace(dict) {
     	var modified = false;
        
@@ -51,16 +146,16 @@
            	return result;
            }
         }
-   		return 'The number is too large: ' + v;
+   	 	error('The number is too large: ' + v);
     }
     
     function num2bin(v, bits, BE, unsigned) { 
         if(bits % 8) {
-            return 'The bits size should be multiples of 8'
+            error('The bits size should be multiples of 8')
         }
         let max = 2**bits - 1;
         if(v > max || v < -max) {
-            return 'Impossible encoding for number ' + v
+            error('Impossible encoding for number ' + v)
         }
         let signBit = v > 0 ? 0 : 0x80;
         v = Math.abs(v);
@@ -85,7 +180,7 @@
 }
 
 start
-	= ws head:block tail:blockTail* {
+	= ws head:block tail:blockTail* ws {
     	tail.unshift(head);
         let r = new Map();
         for (var i = 0; i < tail.length; i++) {
@@ -94,7 +189,13 @@ start
             	r.set(k, tail[i].body);
             }
         }
-        return console.log(replace(r));
+        // console.log(r)
+        r = replace(r)
+        // console.log(r)
+        r = unroll(r)
+        // console.log(r)
+        r = toASM(r)
+        return r;
       }
 
 word "word"
@@ -112,11 +213,17 @@ blockTail
 
 elements
 	= tail:elementTail* {
-        return tail;
+    	var r = [];
+    	for(var i = 0; i < tail.length; i++) {
+        	if(tail[i] != null) {
+            	r.push(tail[i])
+            }
+        }
+        return r;
       }
     
 definition
-	= ':' ws w:word e:elements ' ;' { return { name: w, body: e } }
+	= ':' ws w:word e:elements ws ';' { return { name: w, body: e } }
     
 LineTerminator
  	= [\n\r\u2028\u2029]
@@ -126,6 +233,7 @@ element
     / number
     / string
     / word
+    / comment
     
 elementTail
 	= ws e:element { return e; }
@@ -193,6 +301,10 @@ hexDigit
   = [0-9a-fA-F]
 
 number
+	= posNumber
+    / negNumber
+
+posNumber
     = hexNumber
     / '0' { return 0; }
     / head:[1-9] tail:[0-9]* {
@@ -200,6 +312,9 @@ number
     	x = parseInt(head + tail.join(''));
         return x;
       }
+      
+negNumber
+	= '-' n:posNumber { return -n }
     
 hexNumber
     = '0x' head:hexDigit tail:hexDigit* { return parseInt(head + tail.join(''), 16); }
