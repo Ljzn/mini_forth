@@ -22,6 +22,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     	let full = {
         	tas: 'toaltstack',
             fas: 'fromaltstack',
+            '+': 'add',
+            '-': 'sub',
+            '*': 'mul',
+            '/': 'div'
         }[op];
         if(full) {
         	return 'OP_' + full.toUpperCase()
@@ -199,10 +203,13 @@ start
       }
 
 word "word"
-	= chars:nameChar+ { return 'WORD:' + chars.join('') }
+  = w:$(digit* nad+ ( digit / nad )*) { return 'WORD:' + w }
     
-nameChar
-    = [a-z0-9]
+nad =
+	[a-z\+\-|*\/]i
+    
+digit =
+	[0-9]
 
 block
 	= definition
@@ -230,9 +237,9 @@ LineTerminator
 
 element
 	= bytes
+    / word
     / number
     / string
-    / word
     / comment
     
 elementTail
