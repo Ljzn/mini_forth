@@ -36,11 +36,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     	let main = dict.get("WORD:main");
         main.reverse();
         let asm = '';
-        // console.log(main)
+        console.log(main)
         while(main.length > 0) {
         	let h = main.pop();
             let s;
-            if(Number.isInteger(h)) {
+            if(typeof(h) == 'bigint') {
             	s = minimal_encode(h);
             } else if(alias(h)){
             	s = alias(h);
@@ -66,7 +66,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             if(h == 'WORD:do') {
             	let start = m1.pop();
                 let stop = m1.pop();
-				if(!(Number.isInteger(start)&&Number.isInteger(stop))) {
+				if(!(typeof(start) == 'bigint' && typeof(stop) == 'bigint')) {
                 	error('The start and stop params of loop must be known at compile time')
                 }
                 var loop = [];
@@ -92,15 +92,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             	m1.push(h);
             }
         }
-        
+
         dict.set('WORD:main', m1);
-        
+
         return dict
     }
-    
+
 	function replace(dict) {
     	var modified = false;
-       
+
     	// do replace
         dict.forEach((v, k) => {
         	for(var i = 0; i < v.length; i++) {
@@ -113,7 +113,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 }
             }
         })
-	
+
     	if(!modified) {
         	return dict;
         } else {
@@ -134,16 +134,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         	return 'OP_' + v;
         }
     	let signBit = v > 0 ? 0 : 0x80;
-        v = Math.abs(v);
+        v = v > 0 ? v : -v;
         var result = '';
         for (var i = 0; i < 1000; i ++) {
            let e;
            if(v < 128) {
-               e = v|signBit
+               e = Number(v)|signBit
                v = 'end';
            } else {
-               e = (v % 256);
-               v = Math.floor(v/256);
+               e = v % 256n;
+               v = v/256n;
            }
            result += e.toString(16).padStart(2, '0');
            if(v == 'end') {
@@ -152,8 +152,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         }
    	 	error('The number is too large: ' + v);
     }
-    
-    function num2bin(v, bits, BE, unsigned) { 
+
+    function num2bin(v, bits, BE, unsigned) {
         if(bits % 8) {
             error('The bits size should be multiples of 8')
         }
@@ -168,10 +168,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         for (var i = 0; i < bytes; i ++) {
            let e;
            if(!unsigned && i == bytes-1) {
-               e = (v % 128)|signBit
+               e = Number(v % 128n)|signBit
            } else {
-               e = (v % 256);
-               v = Math.floor(v/256);
+               e = Number(v % 256n);
+               v = v/256n;
            }
            if(!BE) {
            	result += e.toString(16).padStart(2, '0');
@@ -203,18 +203,19 @@ start
       }
 
 word "word"
-  = w:$(digit* nad+ ( digit / nad )*) { return 'WORD:' + w }
-    
-nad =
-	[a-z\+\-|*\/]i
-    
+  = w:$(digit* letter ( digit / letter )*) { return 'WORD:' + w }
+  / [\+\-\*\/]
+
+letter =
+	[a-z]i
+
 digit =
 	[0-9]
 
 block
 	= definition
     / comment
-    
+
 blockTail
 	= ws b:block { return b }
 
@@ -228,10 +229,10 @@ elements
         }
         return r;
       }
-    
+
 definition
 	= ':' ws w:word e:elements ws ';' { return { name: w, body: e } }
-    
+
 LineTerminator
  	= [\n\r\u2028\u2029]
 
@@ -241,7 +242,7 @@ element
     / number
     / string
     / comment
-    
+
 elementTail
 	= ws e:element { return e; }
 
@@ -274,7 +275,7 @@ quotation_mark
 
 unescaped
   = [^\0-\x1F\x22\x5C]
-  
+
 HEXDIG = [0-9a-f]i
 
 comment
@@ -293,7 +294,7 @@ bytes
         return tail.reduce(
         	(acc, x) => {
         		return acc + num2bin(x.value, x.size, true, true)
-        	}, ''	
+        	}, ''
         );
       }
 
@@ -313,18 +314,18 @@ number
 
 posNumber
     = hexNumber
-    / '0' { return 0; }
+    / '0' { return 0n; }
     / head:[1-9] tail:[0-9]* {
     	var x;
-    	x = parseInt(head + tail.join(''));
+    	x = BigInt(head + tail.join(''));
         return x;
       }
-      
+
 negNumber
 	= '-' n:posNumber { return -n }
-    
+
 hexNumber
-    = '0x' head:hexDigit tail:hexDigit* { return parseInt(head + tail.join(''), 16); }
+    = '0x' head:hexDigit tail:hexDigit* { return BigInt(head + tail.join(''), 16); }
 
 size
     = ':' num:number { return num; }
