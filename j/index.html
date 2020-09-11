@@ -1,11 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>JS Bin</title>
 </head>
+
 <body>
-    <p>Hello World</p>
+    <textarea id='miniForth'>
+
+  </textarea>
+
+    <div id='asm'>
+
+    </div>
 </body>
+
+<script>
+    var W;
+    var H;
+    var M = document.getElementById('miniForth');
+    var A = document.getElementById('asm')
+    A.style.backgroundColor = '#F1F1F1';
+
+    window.setInterval(() => {
+        // window size
+        W = window.innerWidth;
+        H = window.innerHeight;
+        M.style.height = H / 2 + 'px';
+        M.style.width = W + 'px';
+        A.style.height = H / 2 + 'px';
+        A.style.width = W + 'px';
+
+        // parse result
+        M.value = 'hello'
+        A.innerText = 'world'
+
+    }, 1000)
+
+
+
+</script>
+
 </html>
