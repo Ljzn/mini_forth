@@ -154,16 +154,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     }
 
     function num2bin(v, bits, BE, unsigned) {
-        if(bits % 8) {
+        if(bits % 8n) {
             error('The bits size should be multiples of 8')
         }
-        let max = 2**bits - 1;
+        let max = 2n**bits - 1n;
         if(v > max || v < -max) {
             error('Impossible encoding for number ' + v)
         }
-        let signBit = v > 0 ? 0 : 0x80;
-        v = Math.abs(v);
-        let bytes = bits / 8;
+        let signBit = v > 0n ? 0n : 0x80n;
+        v = v >= 0n ? v : -v
+        let bytes = bits / 8n;
         var result = '';
         for (var i = 0; i < bytes; i ++) {
            let e;
@@ -207,7 +207,7 @@ word "word"
   / [\+\-\*\/]
 
 letter =
-	[a-z]i
+	[a-z]i / '_'
 
 digit =
 	[0-9]
@@ -297,6 +297,7 @@ bytes
         	}, ''
         );
       }
+     / '<<>>' { return 0n }
 
 segmentTail
     = ws ',' ws seg:segment { return seg; }
@@ -325,7 +326,7 @@ negNumber
 	= '-' n:posNumber { return -n }
 
 hexNumber
-    = '0x' head:hexDigit tail:hexDigit* { return BigInt(head + tail.join(''), 16); }
+    = '0x' head:hexDigit tail:hexDigit* { return BigInt('0x' + head + tail.join(''), 16); }
 
 size
     = ':' num:number { return num; }
