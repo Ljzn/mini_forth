@@ -1,0 +1,1 @@
+pegjs -o mini.js mini.pegjs
