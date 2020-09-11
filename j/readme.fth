@@ -1,8 +1,8 @@
 \ MiniForth
 \
-\ Lines after `\` are the comments.
+\ Lines after "\" are the comments.
 \
-\ Use `:` and `;` to define a word.
+\ Use ":" and ";" to define a word.
 
 : add2 2 + ;
 
@@ -11,7 +11,7 @@
 
 : add4 add2 add2 ;
 
-\ The `(` `)` can make embeded comment,
+\ The "(" ")" can make embeded comment,
 \ we often use it as a spec.
 
 : area_of_rect ( a b -- area )
@@ -28,12 +28,12 @@
 : hello "你好" ;
 
 \ You can input arbitray size of binary
-\ with `<<value:bit_size>>` syntax,
+\ with "<<value:bit_size>>" syntax,
 \ the value is encoded in big endian.
 
 : a_binary <<1:8, 0xffabcd:64>> ;
 
-\ Only the `main` word will be compiled.
+\ Only the "main" word will be compiled.
 
 : main
     a_large_number
@@ -43,7 +43,7 @@
 ;
 
 \ You can do a simple loop with
-\ `[stop] [start] do ... loop`
+\ "[stop] [start] do ... loop"
 
 : dup_3_times
     3 0 do dup loop
