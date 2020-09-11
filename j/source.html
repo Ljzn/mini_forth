@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>JS Bin</title>
+</head>
+
+<body>
+    <textarea id='miniForth'>
+
+  </textarea>
+
+    <div id='asm'>
+
+    </div>
+</body>
+
+<script>
+    XXXPARSERXXX
+
+
+    var W;
+    var H;
+    var M = document.getElementById('miniForth');
+    var A = document.getElementById('asm')
+    A.style.backgroundColor = '#F1F1F1';
+
+    M.value = String.raw`XXXREADMEXXX`
+
+    window.setInterval(() => {
+        // window size
+        W = window.innerWidth;
+        H = window.innerHeight;
+        M.style.height = H / 2 + 'px';
+        M.style.width = W + 'px';
+        A.style.height = H / 2 + 'px';
+        A.style.width = W + 'px';
+
+        // parse result
+        var i = M.value
+        var o;
+        try {
+            o = peg$parse(i)
+        } catch (err) {
+            o = err
+        }
+        //   console.log(o)
+
+        A.innerText = o;
+
+    }, 1000)
+
+
+
+</script>
+
+</html>
