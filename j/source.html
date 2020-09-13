@@ -12,9 +12,7 @@
 
   </textarea>
 
-    <div id='asm'>
-
-    </div>
+    <div id='asm'></div>
 </body>
 
 <script>
@@ -29,27 +27,32 @@
 
     M.value = String.raw`XXXREADMEXXX`
 
+    // window size
+    W = window.innerWidth;
+    H = window.innerHeight;
+    M.style.height = H / 2 - 25 + 'px';
+    M.style.width = W - 20  + 'px';
+    A.style.height = H / 2 - 25 + 'px';
+    A.style.width = W - 20 + 'px';
+
+    var i0;
+    var i1;
+
     window.setInterval(() => {
-        // window size
-        W = window.innerWidth;
-        H = window.innerHeight;
-        M.style.height = H / 2 + 'px';
-        M.style.width = W + 'px';
-        A.style.height = H / 2 + 'px';
-        A.style.width = W + 'px';
-
         // parse result
-        var i = M.value
+        i1 = M.value;
         var o;
-        try {
-            o = peg$parse(i)
-        } catch (err) {
-            o = err
+        if(i1 != i0) {
+            try {
+                o = peg$parse(i1)
+            } catch (err) {
+                o = err
+            }
+            //   console.log(o)
+        
+            A.innerText = o;
         }
-        //   console.log(o)
-
-        A.innerText = o;
-
+        i0 = i1;
     }, 1000)
 
 
