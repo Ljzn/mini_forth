@@ -1654,7 +1654,7 @@ function peg$parse(input, options) {
 
       	// do replace
           dict.forEach((v, k) => {
-              console.log([v, k])
+              // console.log([v, k])
               if(v.includes(k)) {
                   error("Recursion word '" + k + "' is unsupported")
               }
@@ -1666,6 +1666,7 @@ function peg$parse(input, options) {
                		v = v.flat();
                       dict.set(k, v);
                       modified = true;
+                      break;
                   }
               }
           })

@@ -103,7 +103,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
     	// do replace
         dict.forEach((v, k) => {
-            console.log([v, k])
+            // console.log([v, k])
             if(v.includes(k)) {
                 error("Recursion word '" + k + "' is unsupported")
             }
@@ -115,6 +115,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
              		v = v.flat();
                     dict.set(k, v);
                     modified = true;
+                    break;
                 }
             }
         })
