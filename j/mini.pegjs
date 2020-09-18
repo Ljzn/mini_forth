@@ -103,6 +103,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
     	// do replace
         dict.forEach((v, k) => {
+            console.log([v, k])
+            if(v.includes(k)) {
+                error("Recursion word '" + k + "' is unsupported")
+            }
+
         	for(var i = 0; i < v.length; i++) {
             	let a = dict.get(v[i]);
                 if(a) {
