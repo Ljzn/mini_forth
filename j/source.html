@@ -19,6 +19,33 @@
     <a href="./fulfill.html"><button>Fulfill the predicate</button></a>
 </footer>
 
+<script type="text/javascript">
+    var myInput = document.getElementById("miniForth");
+    if(myInput.addEventListener ) {
+        myInput.addEventListener('keydown',this.keyHandler,false);
+    } else if(myInput.attachEvent ) {
+        myInput.attachEvent('onkeydown',this.keyHandler); /* damn IE hack */
+    }
+
+    function keyHandler(e) {
+        var TABKEY = 9;
+        if(e.keyCode == TABKEY) {
+            var start = myInput.selectionStart;
+            var end = myInput.selectionEnd;
+            var sel = myInput.value.substring(start, end);
+            var finText = myInput.value.substring(0, start) + '    ' + myInput.value.substring(end);
+            myInput.value = finText;
+            myInput.focus();
+            myInput.selectionEnd= end + 4;
+
+            if(e.preventDefault) {
+                e.preventDefault();
+            }
+            return false;
+        }
+    }
+</script>
+
 <script>
     XXXPARSERXXX
 
