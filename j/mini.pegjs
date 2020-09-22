@@ -299,7 +299,7 @@ bytes
     	tail.unshift(head);
         return tail.reduce(
         	(acc, x) => {
-        		return acc + num2bin(x.value, x.size, true, true)
+        		return acc + num2bin(x.value, x.size, x.endian == 'big', true)
         	}, ''
         );
       }
@@ -309,8 +309,8 @@ segmentTail
     = ws ',' ws seg:segment { return seg; }
 
 segment
-    = v:number size:size ?
-      { return {value: v, size: size || 8}; }
+    = v:number size:size? endian:endian?
+      { return {value: v, size: size || 8n, endian: endian || 'big'}; }
 
 hexDigit
   = [0-9a-fA-F]
@@ -337,4 +337,8 @@ hexNumber
 size
     = ':' num:number { return num; }
 
+endian
+    = '/little' { return 'little' }
+    / '/big' { return 'big' }
+    
 ws = [ \t\n]*
