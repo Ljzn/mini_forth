@@ -5,14 +5,38 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <title>miniForth playGround</title>
+    <style>
+        *{
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        }
+
+        .parent {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        grid-column-gap: 0px;
+        grid-row-gap: 0px;
+        width: 100vw;
+        height: 100vh;
+        }
+
+        #miniForth { 
+            min-width: 50vw;
+            grid-area: 1 / 1 / 3 / 2; 
+        }
+        #asm { grid-area: 1 / 2 / 2 / 3; }
+        #result { grid-area: 2 / 2 / 3 / 3; }
+    </style>
 </head>
 
 <body>
-    <textarea id='miniForth'>
-
-  </textarea>
-
-    <div id='asm'></div>
+    <div class="parent">
+        <textarea id='miniForth'></textarea>
+        <div id='asm'></div>
+        <div id='result'></div>
+    </div>
 </body>
 
 <!-- <footer>
@@ -60,13 +84,13 @@
 
     M.value = String.raw`XXXREADMEXXX`
 
-    // window size
-    W = window.innerWidth;
-    H = window.innerHeight;
-    M.style.height = H / 2 - 25 + 'px';
-    M.style.width = W - 20  + 'px';
-    A.style.height = H / 2 - 25 + 'px';
-    A.style.width = W - 20 + 'px';
+    // // window size
+    // W = window.innerWidth;
+    // H = window.innerHeight;
+    // M.style.height = H / 2 - 25 + 'px';
+    // M.style.width = W - 20  + 'px';
+    // A.style.height = H / 2 - 25 + 'px';
+    // A.style.width = W - 20 + 'px';
 
     var i0;
     var i1;
@@ -90,6 +114,8 @@
         i0 = i1;
     }, 1000)
 
+    var r = document.getElementById('result')
+
     function evalScript(opcodes) {
         console.log(opcodes)
         let s = bsvjs.Script.fromAsmString(opcodes);
@@ -97,8 +123,22 @@
         // i.flags = bsvjs.Script.Interpreter.SCRIPT_ENABLE_MAGNETIC_OPCODES | bsv.Script.Interpreter.SCRIPT_ENABLE_MONOLITH_OPCODES;
         i.script = s;
         i.verify();
+        console.log(i)
+        i = i.toJSON()
 
-        console.log(i);
+        console.log(i)
+        r.innerText = 'stack: '
+        + JSON.stringify(fixDouble(i.stack))
+        + '\naltstack: '
+        + JSON.stringify(fixDouble(i.altStack))
+        + (i.errStr != '' ? `\nerror: ${i.errStr}` : '')
+    }
+
+    // function lineLimit(str) {
+    //     return str.match(/.{1,30}/g).join('\n')
+    // }
+    function fixDouble(str) {
+        return str.slice(str.length/2)
     }
 
 </script>
