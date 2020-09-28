@@ -15,9 +15,9 @@
     <div id='asm'></div>
 </body>
 
-<footer>
+<!-- <footer>
     <a href="./fulfill.html"><button>Fulfill the predicate</button></a>
-</footer>
+</footer> -->
 
 <script type="text/javascript">
     var myInput = document.getElementById("miniForth");
@@ -46,6 +46,8 @@
     }
 </script>
 
+<script src="./modules/bsv.bundle.js"></script>
+
 <script>
     XXXPARSERXXX
 
@@ -68,14 +70,16 @@
 
     var i0;
     var i1;
+    var o;
 
     window.setInterval(() => {
         // parse result
         i1 = M.value;
-        var o;
+
         if(i1 != i0) {
             try {
                 o = peg$parse(i1)
+                evalScript(o)
             } catch (err) {
                 o = err
             }
@@ -86,7 +90,16 @@
         i0 = i1;
     }, 1000)
 
+    function evalScript(opcodes) {
+        console.log(opcodes)
+        let s = bsvjs.Script.fromAsmString(opcodes);
+        let i = new bsvjs.Interp();
+        // i.flags = bsvjs.Script.Interpreter.SCRIPT_ENABLE_MAGNETIC_OPCODES | bsv.Script.Interpreter.SCRIPT_ENABLE_MONOLITH_OPCODES;
+        i.script = s;
+        i.verify();
 
+        console.log(i);
+    }
 
 </script>
 
