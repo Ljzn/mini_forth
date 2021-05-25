@@ -1,4 +1,4 @@
 # MiniForth
 
-- [playground](./j)
-- [compiler(archived)](./c)
+- [playground(archived)](./j)
+- [compiler](./c)

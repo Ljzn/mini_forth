@@ -72,6 +72,8 @@
 
 : <= > not ;
 
+: != = not ;
+
 : hash256 sha256 sha256 ;
 
 : hash160 sha256 ripemd160 ;
